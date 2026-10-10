@@ -1,0 +1,3 @@
+io.github.backaad.mobilemoney.spring.MobileMoneyRedisAutoConfiguration
+io.github.backaad.mobilemoney.spring.MobileMoneyAutoConfiguration
+io.github.backaad.mobilemoney.spring.MobileMoneyWebMvcAutoConfiguration

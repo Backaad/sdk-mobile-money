@@ -28,6 +28,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Simulation provider, which never confirms a payment.
   - Tests for the reliability and security rules, and a Campay sandbox test
     skipped when no keys are set.
+- Spring Boot starter (`sdk-mobile-money-spring-boot-starter`, Spring Boot 4):
+  - `mobile-money.*` properties, checked at startup with a report that names
+    the property to fix (missing key or environment, simulation mixed with a
+    provider, local callback URL in production, Redis that may evict keys...);
+  - Redis stores for idempotency records, Tara callback tokens and pending
+    payments, used when the application has Redis; in-memory otherwise;
+  - webhook endpoint `/mobile-money/webhooks/{provider}` that verifies each
+    webhook and publishes `PaymentConfirmedEvent` or `PaymentFailedEvent`;
+  - optional task, off by default, that reads pending payments again.
+  - See `docs/spring-boot.md`.
+- Core: `MobileMoney.Builder.callbackBaseUrl` (each request gets the callback
+  URL of the provider that processes it), `transactionListener`, and
+  `MobileMoney.providerIds()`.
+- Demo server (`examples/spring-boot-demo`): start a payment, read its status,
+  receive webhooks; simulation by default; `docker-compose.yml` with Redis.
+- CI: Redis service for the starter tests, demo build and tests, and a Docker
+  Compose smoke test of the demo image.
 - MTN MoMo provider: collection (`requesttopay`) and payout (disbursement
   `transfer`), one access token per product with renewal after a 401, status
   reads, unsigned callbacks confirmed by a status read. The transaction

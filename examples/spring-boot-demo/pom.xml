@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!--
+        Demo server. It uses the SDK built from this repository: install it first with
+        (cd java && ./mvnw install -DskipTests), then (cd java && ./mvnw -f ../examples/spring-boot-demo/pom.xml ...).
+    -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>4.1.1</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>io.github.backaad</groupId>
+    <artifactId>spring-boot-demo</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+    <name>sdk-mobile-money Spring Boot demo</name>
+
+    <properties>
+        <java.version>17</java.version>
+        <sdk-mobile-money.version>0.1.0-SNAPSHOT</sdk-mobile-money.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.github.backaad</groupId>
+            <artifactId>sdk-mobile-money-spring-boot-starter</artifactId>
+            <version>${sdk-mobile-money.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webmvc</artifactId>
+        </dependency>
+        <!-- Redis is used when MOBILE_MONEY_STORE=redis (docker-compose sets it). -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webmvc-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <finalName>spring-boot-demo</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>

@@ -1,0 +1,37 @@
+# Starts the demo server and Redis: docker compose up --build
+# The server runs in simulation mode unless you set MOBILE_MONEY_SIMULATION=false
+# and your own sandbox keys in the .env file at the root of the repository.
+name: sdk-mobile-money-demo
+
+services:
+  redis:
+    image: redis:7.4-alpine
+    # noeviction: an evicted idempotency record could let a payment through twice.
+    # appendonly: idempotency records survive a Redis restart.
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory-policy", "noeviction"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  demo:
+    build:
+      context: ../..
+      dockerfile: examples/spring-boot-demo/Dockerfile
+    depends_on:
+      redis:
+        condition: service_healthy
+    env_file:
+      - path: ../../.env
+        required: false
+    environment:
+      MOBILE_MONEY_STORE: redis
+      REDIS_HOST: redis
+    ports:
+      - "8080:8080"
+
+volumes:
+  redis-data:

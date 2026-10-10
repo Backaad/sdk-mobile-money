@@ -1,0 +1,15 @@
+<configuration>
+    <!-- Every SDK log event is produced at TRACE in tests, so that the secret-leak test sees them all. -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%-5level %logger{20} - %msg%n</pattern>
+        </encoder>
+    </appender>
+    <logger name="io.github.backaad.mobilemoney" level="TRACE"/>
+    <logger name="com.github.tomakehurst" level="WARN"/>
+    <logger name="org.eclipse.jetty" level="WARN"/>
+    <logger name="wiremock" level="WARN"/>
+    <root level="WARN">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+</configuration>

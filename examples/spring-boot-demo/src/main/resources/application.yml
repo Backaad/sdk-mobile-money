@@ -1,0 +1,42 @@
+# Demo server configuration. Provider keys come from environment variables (your
+# own .env, see .env.example at the root of the repository), never from this file.
+spring:
+  application:
+    name: sdk-mobile-money-demo
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+mobile-money:
+  # memory by default; docker-compose sets MOBILE_MONEY_STORE=redis.
+  store: ${MOBILE_MONEY_STORE:memory}
+  # Simulation by default: talks to nobody and never confirms a payment.
+  # Set MOBILE_MONEY_SIMULATION=false to use the providers configured below.
+  simulation:
+    enabled: ${MOBILE_MONEY_SIMULATION:true}
+  default-provider: ${MOBILE_MONEY_DEFAULT_PROVIDER:}
+  # Public URL of /mobile-money/webhooks, for example an HTTPS tunnel to this server.
+  callback-base-url: ${MOBILE_MONEY_CALLBACK_BASE_URL:}
+  pending-check:
+    enabled: ${MOBILE_MONEY_PENDING_CHECK:false}
+  campay:
+    environment: ${CAMPAY_ENVIRONMENT:}
+    username: ${CAMPAY_USERNAME:}
+    password: ${CAMPAY_PASSWORD:}
+    webhook-key: ${CAMPAY_WEBHOOK_KEY:}
+  mtn-momo:
+    environment: ${MTN_MOMO_ENVIRONMENT:}
+    target-environment: ${MTN_MOMO_TARGET_ENVIRONMENT:}
+    currency: ${MTN_MOMO_CURRENCY:}
+    collection:
+      subscription-key: ${MTN_MOMO_COLLECTION_SUBSCRIPTION_KEY:}
+      api-user: ${MTN_MOMO_COLLECTION_API_USER:}
+      api-key: ${MTN_MOMO_COLLECTION_API_KEY:}
+  notchpay:
+    public-key: ${NOTCHPAY_PUBLIC_KEY:}
+    private-key: ${NOTCHPAY_PRIVATE_KEY:}
+    webhook-secret: ${NOTCHPAY_WEBHOOK_SECRET:}
+  tara:
+    api-key: ${TARA_API_KEY:}
+    business-id: ${TARA_BUSINESS_ID:}
