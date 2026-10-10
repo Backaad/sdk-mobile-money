@@ -9,6 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Java core (`sdk-mobile-money-core`):
+  - `MobileMoney` entry point: collect, payout, status and webhook handling,
+    whatever the provider.
+  - Common model: payment and payout requests, transactions with the provider
+    that processed them and its raw status, verified webhook events, provider
+    capabilities, typed errors.
+  - Phone numbers: normalization of the usual written forms, operator
+    detection with a configurable prefix table, wire format per provider, and
+    reference data shared with the Dart tests (`testdata/phone-numbers.json`).
+  - Idempotency: every collection and payout goes through a key valid for
+    24 hours, with an in-memory store. A repeated request (double tap, retry)
+    gets the first result; a request whose answer was lost is never sent again.
+  - Campay provider: token cache with renewal after a 401, collect, payout,
+    status, and webhooks signed with JWT HS256 (GET or POST).
+  - Simulation provider, which never confirms a payment.
+  - Tests for the reliability and security rules, and a Campay sandbox test
+    skipped when no keys are set.
+- `docs/providers/campay.md`: what was checked and what remains to be confirmed.
 - Project skeleton: Maven build for the Java core (Jackson 3) and the Spring
   Boot 4 starter, empty Flutter package, CI on GitHub Actions (JDK 17 and 21,
   Flutter) with coverage sent to Codecov, `.env.example` and `CLAUDE.md`.
