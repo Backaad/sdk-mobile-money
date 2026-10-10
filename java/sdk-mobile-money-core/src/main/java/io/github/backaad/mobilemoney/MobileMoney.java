@@ -195,7 +195,7 @@ public final class MobileMoney {
      *
      * <p>Suggested HTTP answers: 200 when an event is returned, 400 on
      * {@link WebhookVerificationException}, 503 on {@link ProviderUnavailableException} so that the
-     * provider can send the webhook again.
+     * provider can send the webhook again, 500 on {@link ConfigurationException} (fix the configuration).
      *
      * @param provider the provider whose webhook URL was called
      * @param request the webhook as received
@@ -204,6 +204,8 @@ public final class MobileMoney {
      *     the transaction the provider describes
      * @throws ProviderUnavailableException if the status could not be read again; ask for a new delivery
      * @throws ProviderAuthenticationException if the provider refused the credentials
+     * @throws ConfigurationException if the provider is not configured to verify webhooks (for example no
+     *     Campay webhook key)
      */
     public WebhookEvent handleWebhook(ProviderId provider, WebhookRequest request) {
         Objects.requireNonNull(provider, "provider");

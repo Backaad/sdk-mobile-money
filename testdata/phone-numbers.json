@@ -1,5 +1,5 @@
 {
-  "description": "Reference data shared by the Java and Dart tests. Both sides must: accept every 'valid' input with exactly the expected result (operator null = not detected with the default prefix table); reject every 'invalid' input with the given reason; and use exactly 'defaultPrefixTable' as their default operator table.",
+  "description": "Reference data for the Java tests and, once the Flutter package has its phone module, the Dart tests. Both sides must: accept every 'valid' input with exactly the expected result (operator null = not detected with the default prefix table); reject every 'invalid' input with the given reason; and use exactly 'defaultPrefixTable' as their default operator table.",
   "defaultPrefixTable": {
     "MTN": ["650-654", "670-679", "680-683"],
     "ORANGE": ["655-659", "690-699"]

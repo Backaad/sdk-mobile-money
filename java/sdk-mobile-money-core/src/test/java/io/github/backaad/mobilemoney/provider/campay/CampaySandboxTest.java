@@ -1,14 +1,19 @@
 package io.github.backaad.mobilemoney.provider.campay;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
 
 import io.github.backaad.mobilemoney.MobileMoney;
 import io.github.backaad.mobilemoney.PaymentRequest;
-import io.github.backaad.mobilemoney.ProviderAuthenticationException;
 import io.github.backaad.mobilemoney.ProviderId;
 import io.github.backaad.mobilemoney.Transaction;
 import io.github.backaad.mobilemoney.TransactionStatus;
+import io.github.backaad.mobilemoney.TransactionType;
+import io.github.backaad.mobilemoney.internal.HttpCaller;
+import io.github.backaad.mobilemoney.provider.StatusReport;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.time.Clock;
+import java.time.Duration;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
@@ -16,7 +21,7 @@ import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 /**
  * Runs against the real Campay sandbox (https://demo.campay.net) with the developer's own keys, read from
  * the environment (see .env.example). Without them, the tests are reported as skipped, never failed. The
- * project has no keys of its own, so these tests have never been run by the CI.
+ * project has no keys of its own, so these tests have never been run by the CI. Any error fails them.
  */
 @EnabledIfEnvironmentVariable(named = "CAMPAY_USERNAME", matches = "\\S+")
 @EnabledIfEnvironmentVariable(named = "CAMPAY_PASSWORD", matches = "\\S+")
@@ -31,25 +36,22 @@ class CampaySandboxTest {
     }
 
     @Test
-    void credentialsAreAccepted() {
-        CampayProvider provider = sandbox();
+    void sandboxGivesAnAccessToken() {
+        CampayTokens tokens = new CampayTokens(
+                new HttpCaller(HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NEVER).build(),
+                        ProviderId.CAMPAY),
+                URI.create(CampayEnvironment.SANDBOX.baseUrl() + "/api/token/"),
+                System.getenv("CAMPAY_USERNAME"), System.getenv("CAMPAY_PASSWORD"),
+                Clock.systemUTC(), Duration.ofSeconds(30));
 
-        // Reading an unknown transaction needs a valid token; the answer itself does not matter.
-        assertThatCode(() -> {
-            try {
-                provider.fetchStatus(null, UUID.randomUUID().toString());
-            } catch (ProviderAuthenticationException e) {
-                throw e;
-            } catch (RuntimeException expected) {
-                // Not found or unavailable: the credentials were accepted.
-            }
-        }).doesNotThrowAnyException();
+        assertThat(tokens.get()).isNotBlank();
     }
 
     @Test
     @EnabledIfEnvironmentVariable(named = "CAMPAY_SANDBOX_PHONE_NUMBER", matches = "\\S+")
     void collectionStartsAndItsStatusCanBeRead() {
-        MobileMoney mobileMoney = MobileMoney.builder().provider(sandbox()).build();
+        CampayProvider provider = sandbox();
+        MobileMoney mobileMoney = MobileMoney.builder().provider(provider).build();
         String reference = "sdk-sandbox-" + UUID.randomUUID();
 
         Transaction transaction = mobileMoney.collect(PaymentRequest.builder()
@@ -61,11 +63,13 @@ class CampaySandboxTest {
                 .build());
 
         assertThat(transaction.provider()).isEqualTo(ProviderId.CAMPAY);
-        assertThat(transaction.providerReference()).isNotBlank();
+        assertThat(transaction.outcomeUnknown()).as("Campay answered with a reference").isFalse();
         assertThat(transaction.status()).isEqualTo(TransactionStatus.PENDING);
 
-        Transaction current = mobileMoney.status(transaction);
-        assertThat(current.status()).isIn(TransactionStatus.PENDING, TransactionStatus.SUCCESSFUL,
-                TransactionStatus.FAILED);
+        // Read the status from the provider directly: any error must fail the test.
+        StatusReport report = provider.fetchStatus(TransactionType.COLLECTION, transaction.providerReference());
+        assertThat(report.providerReference()).isEqualTo(transaction.providerReference());
+        assertThat(report.merchantReference()).isEqualTo(reference);
+        assertThat(report.rawStatus()).isNotBlank();
     }
 }

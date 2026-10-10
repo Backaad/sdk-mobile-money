@@ -57,7 +57,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <systemPropertyVariables>
-                        <!-- Reference data shared with the Dart tests. -->
+                        <!-- Reference data, meant to be read by the Dart tests too. -->
                         <testdata.dir>${project.basedir}/../../testdata</testdata.dir>
                     </systemPropertyVariables>
                 </configuration>

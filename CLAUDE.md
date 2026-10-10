@@ -90,7 +90,8 @@ skipped when they are missing: to run them, load your own `.env` first
   query strings or bodies. Never chain Jackson or HTTP client exceptions:
   their messages can contain response content.
 - Reference phone numbers and the default prefix table live in
-  `testdata/phone-numbers.json`, shared with the Dart tests.
+  `testdata/phone-numbers.json`. The Dart tests must read the same file once
+  the Flutter package has its phone module.
 
 ## Flutter
 

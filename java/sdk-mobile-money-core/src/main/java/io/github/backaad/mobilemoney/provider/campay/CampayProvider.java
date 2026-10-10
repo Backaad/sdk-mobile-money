@@ -51,8 +51,9 @@ import tools.jackson.databind.node.ObjectNode;
  *
  * <p>Authentication uses the application's username and password: the access token is kept until it
  * expires (minus one minute), and renewed once if Campay answers 401. Webhooks are configured in the
- * Campay dashboard; their {@code signature} parameter is a JWT signed with HS256 with the application's
- * webhook key.
+ * Campay dashboard; their {@code signature} parameter is verified as a JWT signed with HS256 with the
+ * application's webhook key (scheme taken from third-party code, to be confirmed against Campay's
+ * documentation).
  *
  * <p>What was checked against Campay's documentation and what is still to be confirmed is listed in
  * {@code docs/providers/campay.md}.
@@ -525,8 +526,9 @@ public final class CampayProvider implements PaymentProvider {
         }
 
         /**
-         * Sets the application webhook key, used to verify webhook signatures. Without it, webhooks are
-         * refused.
+         * Sets the application webhook key, used to verify webhook signatures. Without it,
+         * {@link io.github.backaad.mobilemoney.MobileMoney#handleWebhook} throws
+         * {@link ConfigurationException} for Campay webhooks.
          *
          * @param webhookKey the key
          * @return this builder

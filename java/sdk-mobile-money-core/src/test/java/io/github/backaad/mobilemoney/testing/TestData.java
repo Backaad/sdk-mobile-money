@@ -7,7 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import tools.jackson.databind.JsonNode;
 
-/** Reads the reference data shared with the Dart tests (repository folder {@code testdata/}). */
+/** Reads the reference data in the repository folder {@code testdata/}, meant to be shared with the Dart tests. */
 public final class TestData {
 
     private TestData() {

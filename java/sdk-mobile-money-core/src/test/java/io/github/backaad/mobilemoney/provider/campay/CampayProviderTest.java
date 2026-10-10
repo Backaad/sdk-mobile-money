@@ -48,8 +48,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 /**
- * Campay adapter against WireMock, with responses shaped like Campay's published examples: success and
- * refusal, 401 then token renewal, 5xx and empty responses, unknown status.
+ * Campay adapter against WireMock: success and refusal, 401 then token renewal, 5xx and empty responses,
+ * unknown status. The fixtures and their sources (official examples or third-party code) are listed in
+ * src/test/resources/campay/README.md.
  */
 class CampayProviderTest {
 
