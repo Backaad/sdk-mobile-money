@@ -9,6 +9,7 @@ import io.github.backaad.mobilemoney.ProviderId;
 import io.github.backaad.mobilemoney.ProviderUnavailableException;
 import io.github.backaad.mobilemoney.Transaction;
 import io.github.backaad.mobilemoney.TransactionNotFoundException;
+import io.github.backaad.mobilemoney.TransactionStatus;
 import io.github.backaad.mobilemoney.TransactionType;
 import io.github.backaad.mobilemoney.WebhookRequest;
 import io.github.backaad.mobilemoney.WebhookVerificationException;
@@ -80,4 +81,16 @@ public interface PaymentProvider {
      * @throws WebhookVerificationException if the webhook is not authentic or not well formed
      */
     WebhookNotification parseWebhook(WebhookRequest request);
+
+    /**
+     * Maps a status announced by a callback, for providers whose status cannot be read
+     * ({@link io.github.backaad.mobilemoney.WebhookSignature#CALLBACK_TOKEN}). Unknown values map to
+     * PENDING.
+     *
+     * @param rawStatus the announced status, or {@code null}
+     * @return the common status
+     */
+    default TransactionStatus mapClaimedStatus(String rawStatus) {
+        return TransactionStatus.PENDING;
+    }
 }

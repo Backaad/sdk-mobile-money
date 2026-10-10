@@ -87,12 +87,21 @@ class ModelTest {
 
     /** Rule 6: Campay's format applied to every reference number of the shared fixture. */
     @Test
-    void campayFormatForEveryReferenceNumber() {
+    void everyProviderFormatForEveryReferenceNumber() {
         TestData.read("phone-numbers.json").get("valid").valueStream().forEach(c -> {
             PhoneNumber number = PhoneNumber.parse(c.get("input").asString());
-            assertThat(ProviderPhoneFormat.CAMPAY.format(number))
-                    .isEqualTo("237" + c.get("national").asString())
-                    .matches("2376[0-9]{8}");
+            for (ProviderPhoneFormat format : ProviderPhoneFormat.values()) {
+                assertThat(format.format(number)).as(format.name())
+                        .isEqualTo("237" + c.get("national").asString())
+                        .matches("2376[0-9]{8}");
+            }
         });
+    }
+
+    @Test
+    void everyRealProviderHasItsPhoneFormat() {
+        assertThat(java.util.Arrays.stream(ProviderPhoneFormat.values()).map(ProviderPhoneFormat::provider))
+                .containsExactlyInAnyOrder(ProviderId.CAMPAY, ProviderId.MTN_MOMO, ProviderId.NOTCHPAY,
+                        ProviderId.TARA);
     }
 }

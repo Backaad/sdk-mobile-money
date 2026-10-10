@@ -65,4 +65,27 @@ public final class Json {
         }
         return value.asString();
     }
+
+    /**
+     * Reads a whole number given as an integral number or a numeric text.
+     *
+     * @param node the value, or {@code null}
+     * @return the number, or {@code null} if absent or not a whole number
+     */
+    public static Long wholeNumber(JsonNode node) {
+        if (node == null || node.isNull()) {
+            return null;
+        }
+        if (node.isIntegralNumber()) {
+            return node.asLong();
+        }
+        if (node.isString()) {
+            try {
+                return Long.parseLong(node.asString().trim());
+            } catch (NumberFormatException e) {
+                return null;
+            }
+        }
+        return null;
+    }
 }

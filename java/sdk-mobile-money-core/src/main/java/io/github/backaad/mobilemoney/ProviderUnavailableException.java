@@ -13,6 +13,7 @@ public class ProviderUnavailableException extends MobileMoneyException {
     private static final long serialVersionUID = 1L;
 
     private final boolean requestMayHaveBeenProcessed;
+    private final String providerReference;
 
     /**
      * Creates the exception.
@@ -24,8 +25,24 @@ public class ProviderUnavailableException extends MobileMoneyException {
      */
     public ProviderUnavailableException(
             String message, ProviderId provider, boolean requestMayHaveBeenProcessed, Throwable cause) {
+        this(message, provider, requestMayHaveBeenProcessed, null, cause);
+    }
+
+    /**
+     * Creates the exception for a request whose provider reference is already known (chosen by the
+     * client, or returned by an earlier call), so that its status can still be read.
+     *
+     * @param message description, without any secret or response body
+     * @param provider provider involved
+     * @param requestMayHaveBeenProcessed whether the provider may have acted on the request
+     * @param providerReference the provider's reference of the transaction, or {@code null}
+     * @param cause underlying cause, or {@code null}
+     */
+    public ProviderUnavailableException(String message, ProviderId provider, boolean requestMayHaveBeenProcessed,
+            String providerReference, Throwable cause) {
         super(message, provider, cause);
         this.requestMayHaveBeenProcessed = requestMayHaveBeenProcessed;
+        this.providerReference = providerReference;
     }
 
     /**
@@ -35,5 +52,14 @@ public class ProviderUnavailableException extends MobileMoneyException {
      */
     public boolean requestMayHaveBeenProcessed() {
         return requestMayHaveBeenProcessed;
+    }
+
+    /**
+     * Returns the provider's reference of the transaction, when it is known despite the failure.
+     *
+     * @return the reference, or empty
+     */
+    public java.util.Optional<String> providerReference() {
+        return java.util.Optional.ofNullable(providerReference);
     }
 }
