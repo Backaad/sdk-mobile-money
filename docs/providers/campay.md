@@ -33,7 +33,7 @@ read instead, in order of trust:
 | Collect | `POST /api/collect/` with `amount` (text), `currency`, `from`, `description`, `external_reference` (= merchant reference) | official code | confirmed |
 | Collect response | `reference` (required), `ussd_code`, `operator`; status PENDING | official code | confirmed |
 | Payout | `POST /api/withdraw/` with `amount` (text), `currency`, `to`, `description`, `external_reference` | official Python code (Android omits `currency`) | confirmed |
-| Payout response | `reference`; a `status` field is read if present | official code (`reference`); `status` in a third-party stub | partly **to be confirmed** |
+| Payout response | `reference` (required); a `status` field is read if present | official Python code reads `reference`, but the official Android model has no such field; `status` only in a third-party stub | **to be confirmed** |
 | Payout prerequisite | "API withdrawal" must be enabled in the application settings | official README | confirmed |
 | Status | `GET /api/transaction/{reference}/` → `status`, `reference`, `external_reference`, `amount`, `currency`, `operator`, `code`, `operator_reference` | official README | confirmed |
 | Status values | `SUCCESSFUL` → SUCCESSFUL, `FAILED` → FAILED, anything else (including `PENDING`) → PENDING with the raw value kept | official README lists PENDING, SUCCESSFUL, FAILED | confirmed for the 3 values; others (CANCELED, TIMEOUT?) **to be confirmed** |
@@ -44,10 +44,10 @@ read instead, in order of trust:
 | Phone format | `237` + 9 digits, no `+` (for example `237670123456`) | official READMEs | confirmed |
 | Currency | XAF only | official material | confirmed; XOF refused before sending |
 | Webhook delivery | GET with query parameters; POST (JSON or form) also accepted | docs (extract): "Webhook or Callback (GET)"; POST mentioned only by the brief | GET confirmed by extract; POST **to be confirmed** |
-| Webhook parameters | `status`, `reference`, `amount`, `currency`, `operator`, `code`, `operator_reference`, `signature`, `external_reference`, (`endpoint`) | third-party (two independent Go SDKs) and Campay's plugins | **to be confirmed** |
+| Webhook parameters | `status`, `reference`, `amount`, `currency`, `operator`, `code`, `operator_reference`, `signature`, `external_reference`, (`endpoint`) | third-party (two independent Go SDKs) | **to be confirmed** |
 | Webhook signature | `signature` is a JWT, HS256, signed with the application's webhook key (UTF-8 bytes) | four independent third-party implementations | **to be confirmed** |
 | JWT claims | Unknown. The only sample has an empty payload `{}` | third-party test fixture | **to be confirmed** |
-| Sandbox limits | Unknown (25 or 100 XAF maximum, depending on the source) | third-party | **to be confirmed** |
+| Sandbox limits | Probably 25 XAF at most (several recent unofficial sources; one older post says 100) | third-party | **to be confirmed** |
 
 ## Differences from the brief
 
@@ -69,7 +69,8 @@ read instead, in order of trust:
   amount, currency, merchant reference) comes from that read. The JWT probably does not bind the
   transaction (empty sample payload), so a captured signature could be replayed with other
   parameters: the new read makes that harmless. This matters: Campay's own WooCommerce plugin
-  had a payment bypass for trusting the callback (CVE-2025-12883).
+  had a payment bypass (CVE-2025-12883, fixed in its version 1.2.3) because it trusted the
+  status in the query string of its payment redirect instead of asking Campay.
 - A webhook is rejected if its reference or merchant reference differs from what Campay
   returns, if a parameter appears twice, if the JWT claims (when there are any) contradict the
   parameters, or if Campay does not know the reference.
@@ -110,7 +111,9 @@ Each of these needs the Postman page, or a real exchange with the sandbox:
 2. Status code and body for an expired token, wrong credentials, an unknown reference.
 3. Name of the error-code field (`error_code`?) and the full list of codes.
 4. Status values other than PENDING, SUCCESSFUL and FAILED.
-5. Whether the payout response carries a `status`.
+5. The shape of the payout response: `reference` (the official Python SDK reads it, the official
+   Android model has no such field) and `status`. Without a reference, a payout is treated as an
+   unknown outcome: PENDING, never sent again.
 6. Webhook: GET only or POST too; full parameter list; JWT claims (`exp`?); key encoding.
 7. Whether Campay sends a webhook again after a non-2xx answer.
 8. What `/api/collect/` does with `redirect_url` or a 9-digit number.
