@@ -30,13 +30,13 @@ read instead, in order of trust:
 | Auth header | `Authorization: Token <token>` (not `Bearer`) | official code | confirmed |
 | Expired or refused token | HTTP 401 → token renewed, request sent once more | third-party | **to be confirmed** (401 or 403?) |
 | Wrong credentials | Token endpoint 400/401/403 → `ProviderAuthenticationException` | official plugin expects `{"non_field_errors": [...]}`; status code unknown | **to be confirmed** |
-| Collect | `POST /api/collect/` with `amount` (text), `currency`, `from`, `description`, `external_reference` (= merchant reference) | official code | confirmed |
+| Collect | `POST /api/collect/` with `amount` (text), `currency`, `from`, `description`, `external_reference` (= merchant reference) | official code (the Python and Android SDKs send `amount` as text; Campay's WordPress plugins send numbers, so both forms are probably accepted) | confirmed |
 | Collect response | `reference` (required), `ussd_code`, `operator`; status PENDING | official code | confirmed |
 | Payout | `POST /api/withdraw/` with `amount` (text), `currency`, `to`, `description`, `external_reference` | official Python code (Android omits `currency`) | confirmed |
 | Payout response | `reference` (required); a `status` field is read if present | official Python code reads `reference`, but the official Android model has no such field; `status` only in a third-party stub | **to be confirmed** |
 | Payout prerequisite | "API withdrawal" must be enabled in the application settings | official README | confirmed |
 | Status | `GET /api/transaction/{reference}/` → `status`, `reference`, `external_reference`, `amount`, `currency`, `operator`, `code`, `operator_reference` | official README | confirmed |
-| Status values | `SUCCESSFUL` → SUCCESSFUL, `FAILED` → FAILED, anything else (including `PENDING`) → PENDING with the raw value kept | official README lists PENDING, SUCCESSFUL, FAILED | confirmed for the 3 values; others (CANCELED, TIMEOUT?) **to be confirmed** |
+| Status values | `SUCCESSFUL` → SUCCESSFUL, `FAILED` → FAILED, anything else (including `PENDING`) → PENDING with the raw value kept | official README lists PENDING, SUCCESSFUL, FAILED; Campay's own plugins also handle `canceled`/`cancelled` (on their payment redirect) and compare case-insensitively | confirmed for the 3 values; `CANCELED` (kept PENDING for now) **to be confirmed** |
 | Amount in status | number (`5`, `1.0`) or text, kept if it is a whole number | official README (number), third-party (`1.0`, text) | confirmed for numbers |
 | Unknown reference | HTTP 404 → `TransactionNotFoundException`, never FAILED | official README says "transaction not found"; status code unknown | **to be confirmed** |
 | Errors | Body field `message`, kept (cleaned, 200 characters max); `error_code` read if present | official code (`message`) | `error_code` field name **to be confirmed** |

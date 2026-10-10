@@ -9,8 +9,9 @@ import java.util.TreeMap;
 /**
  * Maps the first three digits of a Cameroon mobile number to its operator.
  *
- * <p>Detection by prefix is a guess: a number keeps its prefix if its owner moves to another operator
- * (number portability). It is used to pre-select an operator, never to refuse a number.
+ * <p>Detection by prefix is only a hint: a number keeps its prefix when its owner moves to another
+ * operator (number portability), and since 2023 an Orange Money wallet can be opened on another
+ * operator's SIM card. It is used to pre-select an operator, never to refuse a number.
  *
  * <p>The default table must be checked against the numbering plan published by ART (Agence de
  * Régulation des Télécommunications); it can be replaced with {@link #builder()}.
