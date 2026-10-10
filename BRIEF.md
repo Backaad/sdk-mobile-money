@@ -1,4 +1,4 @@
-# sdk-mobile-money — descriptif du projet
+# sdk-mobile-money : descriptif du projet
 
 Je veux créer un SDK open source qui permet à n'importe quel développeur
 d'**encaisser** et de **verser** de l'argent par Mobile Money au Cameroun, avec une
