@@ -28,7 +28,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Simulation provider, which never confirms a payment.
   - Tests for the reliability and security rules, and a Campay sandbox test
     skipped when no keys are set.
-- `docs/providers/campay.md`: what was checked and what remains to be confirmed.
+- MTN MoMo provider: collection (`requesttopay`) and payout (disbursement
+  `transfer`), one access token per product with renewal after a 401, status
+  reads, unsigned callbacks confirmed by a status read. The transaction
+  reference is chosen before sending, so a lost answer still gives a
+  reference whose status can be read. Sandbox test skipped when no keys are set.
+- NotchPay provider: two-call collection (initialize, then charge on the
+  operator's channel), payout, status reads, and webhooks verified with
+  HMAC-SHA256 compared in constant time.
+- Tara provider (experimental): collection only, with a single-use,
+  unpredictable, expiring callback URL per payment (128-bit token), callbacks
+  matched on reference, amount and number, and an optional IP allowlist.
+- Configurable failover (`MobileMoney.Builder.failover`): the next provider
+  is tried only when nothing reached the previous one, and it is logged.
+- `ProviderFactory`: builds the providers from the variables of
+  `.env.example`; an incomplete configuration prevents startup. New variables:
+  `CAMPAY_ENVIRONMENT`, `MTN_MOMO_ENVIRONMENT`, `MTN_MOMO_CURRENCY`,
+  `TARA_CALLBACK_ALLOWED_IPS`.
+- `ProviderUnavailableException.providerReference()`: an unknown outcome can
+  carry the provider reference when it is known.
+- `docs/providers/`: pages for Campay, MTN MoMo, NotchPay and Tara, with what
+  was checked and what remains to be confirmed.
 - Project skeleton: Maven build for the Java core (Jackson 3) and the Spring
   Boot 4 starter, empty Flutter package, CI on GitHub Actions (JDK 17 and 21,
   Flutter) with coverage sent to Codecov, `.env.example` and `CLAUDE.md`.

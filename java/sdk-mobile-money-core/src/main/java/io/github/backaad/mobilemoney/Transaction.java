@@ -10,7 +10,7 @@ import java.util.Objects;
  * @param provider the provider that really processed the transaction
  * @param type collection or payout
  * @param providerReference the provider's reference, or {@code null} when the provider's answer was lost
- *     (see {@link #outcomeUnknown()})
+ *     before any reference was known (see {@link #outcomeUnknown()})
  * @param merchantReference the merchant's reference
  * @param amount amount requested, in whole units
  * @param currency currency
@@ -48,6 +48,26 @@ public record Transaction(
      */
     public boolean outcomeUnknown() {
         return providerReference == null;
+    }
+
+    /**
+     * Returns a copy processed by another provider, without provider reference.
+     *
+     * @param newProvider the provider
+     * @return the copy
+     */
+    public Transaction withProvider(ProviderId newProvider) {
+        return new Transaction(newProvider, type, null, merchantReference, amount, currency, status, rawStatus);
+    }
+
+    /**
+     * Returns a copy with a provider reference.
+     *
+     * @param newReference the provider's reference, or {@code null}
+     * @return the copy
+     */
+    public Transaction withProviderReference(String newReference) {
+        return new Transaction(provider, type, newReference, merchantReference, amount, currency, status, rawStatus);
     }
 
     /**

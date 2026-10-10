@@ -13,7 +13,34 @@ public enum ProviderPhoneFormat {
     CAMPAY(ProviderId.CAMPAY) {
         @Override
         public String format(PhoneNumber number) {
-            return Objects.requireNonNull(number, "number").countryCode() + number.nationalNumber();
+            return digits(number);
+        }
+    },
+
+    /** MTN MoMo: MSISDN without {@code +}, for example {@code 237670123456}. */
+    MTN_MOMO(ProviderId.MTN_MOMO) {
+        @Override
+        public String format(PhoneNumber number) {
+            return digits(number);
+        }
+    },
+
+    /**
+     * NotchPay: country code and national number, without {@code +}, as in NotchPay's examples (to be
+     * confirmed).
+     */
+    NOTCHPAY(ProviderId.NOTCHPAY) {
+        @Override
+        public String format(PhoneNumber number) {
+            return digits(number);
+        }
+    },
+
+    /** Tara: country code and national number, without {@code +} (to be confirmed). */
+    TARA(ProviderId.TARA) {
+        @Override
+        public String format(PhoneNumber number) {
+            return digits(number);
         }
     };
 
@@ -39,4 +66,8 @@ public enum ProviderPhoneFormat {
      * @return the number as the provider expects it
      */
     public abstract String format(PhoneNumber number);
+
+    private static String digits(PhoneNumber number) {
+        return Objects.requireNonNull(number, "number").countryCode() + number.nationalNumber();
+    }
 }
