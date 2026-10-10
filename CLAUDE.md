@@ -1,7 +1,7 @@
 # CLAUDE.md
 
 Durable rules for this repository. The full project brief, in French, is in
-[`BRIEF.md`](BRIEF.md): read it before starting a new step.
+[`docs/BRIEF.md`](docs/BRIEF.md): read it before starting a new step.
 
 ## The project
 
