@@ -34,7 +34,9 @@ mobile-money:
 
 A provider is enabled as soon as one of its properties is set (an empty value, such
 as an unset environment variable, counts as unset), or with `enabled: true`;
-`enabled: false` turns it off.
+`enabled: false` turns it off. One exception: `mobile-money.mtn-momo.target-environment`
+alone does not enable MTN MoMo (`.env.example` pre-fills it). An enabled provider
+whose keys are missing prevents startup.
 
 | Property | Default | Meaning |
 |---|---|---|
@@ -65,13 +67,17 @@ The application does not start, and the report names the property to fix, when:
 
 - no provider is configured, or a provider is enabled without its keys or its
   environment;
+- a value is an unresolved `${NAME}` placeholder (the environment variable is not
+  set);
 - the simulation is combined with a provider;
 - several providers are enabled without `default-provider`, or `default-provider`
   or `failover` names a provider that is not enabled;
 - MTN MoMo is in production without `target-environment`, or Tara has no
   `callback-base-url`;
-- `callback-base-url` is not a public HTTPS URL (localhost, private address, plain
-  HTTP) while MTN MoMo production or Tara would send it to the provider;
+- `callback-base-url` is not HTTPS (plain HTTP is only accepted on localhost), has a
+  query, a fragment or a trailing `/`, or is not a public address (localhost,
+  private network, `.local`) while MTN MoMo production or Tara would send it to the
+  provider;
 - `store=redis` without a Redis connection, Redis cannot be reached, or Redis may
   evict keys (`maxmemory-policy` other than `noeviction`);
 - a timeout, interval or path is invalid.
@@ -96,7 +102,9 @@ Tara receive their callback URL with each request.
 
 For each webhook, the SDK checks the signature or the single-use token, reads the
 status again from the provider when it can, and then publishes a
-`PaymentConfirmedEvent` or a `PaymentFailedEvent` (both `PaymentOutcomeEvent`):
+`PaymentConfirmedEvent` or a `PaymentFailedEvent` (both `PaymentOutcomeEvent`). A
+Tara single-use token is consumed only after the listeners have run: if one of them
+fails, the next delivery of the same callback is still accepted.
 
 ```java
 @Component
@@ -114,9 +122,12 @@ class Orders {
 ```
 
 The endpoint answers without body: `200` once verified, `400` if the webhook is not
-authentic, `404` for an unknown provider, `503` if the status could not be read (the
-provider sends the webhook again later), `500` if a listener failed or the
-configuration does not allow the verification.
+authentic, `404` for an unknown provider, `413` if the body is larger than 64 KiB,
+`503` if the status could not be read, `500` if a listener failed or the
+configuration does not allow the verification. Whether, when and how often each
+provider sends a webhook again after an error answer is **to be confirmed** in its
+documentation; for providers whose status can be read, the pending-payment task
+(below) does not depend on it.
 
 The path must be reachable without authentication and without CSRF token: with
 Spring Security, permit it explicitly. Behind a reverse proxy, set

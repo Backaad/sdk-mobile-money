@@ -112,7 +112,11 @@ public class MobileMoneyAutoConfiguration {
                 .callbackBaseUrl(properties.callbackBaseUrl())
                 .clock(CLOCK);
         if (properties.pendingCheck().enabled()) {
-            PendingTransactionStore store = pendingStore.getObject();
+            PendingTransactionStore store = pendingStore.getIfAvailable();
+            if (store == null) {
+                // The property was read as true by the binder but not by the bean conditions (yes, on, 1...).
+                throw new ConfigurationException("mobile-money.pending-check.enabled must be true or false", null);
+            }
             Set<ProviderId> readable = configured.providers().stream()
                     .filter(p -> p.capabilities().statusQuery())
                     .map(PaymentProvider::id)

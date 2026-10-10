@@ -146,19 +146,47 @@ class WebhookEndpointTest {
     }
 
     @Test
-    void listenerFailureMakesTheProviderRetry() {
-        runner.withUserConfiguration(MobileMoneyAutoConfigurationTest.CustomProvider.class, FailingListener.class)
+    void listenerFailureIsAnswered500WhateverItsType() {
+        for (Class<?> listener : List.of(FailingListener.class, FailingWithIllegalArgument.class)) {
+            runner.withUserConfiguration(MobileMoneyAutoConfigurationTest.CustomProvider.class, listener)
+                    .run(context -> {
+                        MockMvc mvc = MockMvcBuilders.webAppContextSetup((WebApplicationContext) context
+                                .getSourceApplicationContext()).build();
+                        context.getBean(TestProvider.class).status("ref-7", TransactionStatus.SUCCESSFUL);
+                        mvc.perform(request(HttpMethod.POST, "/mobile-money/webhooks/test-pay?ref=ref-7")
+                                        .header("X-Test-Signature", "ok"))
+                                .andExpect(status().isInternalServerError()).andExpect(content().string(""));
+                    });
+        }
+    }
+
+    @Test
+    void taraCallbackCanBeDeliveredAgainAfterAListenerFailure() {
+        tara.stubFor(post(urlEqualTo("/api/tara/mobilepay")).willReturn(aResponse().withStatus(200)
+                .withBody("{\"status\":\"SUCCESS\"}")));
+        runner.withUserConfiguration(FailsOnce.class)
+                .withPropertyValues("mobile-money.tara.api-key=k", "mobile-money.tara.business-id=b",
+                        "mobile-money.tara.base-url=" + tara.baseUrl(),
+                        "mobile-money.callback-base-url=https://shop.example/mobile-money/webhooks")
                 .run(context -> {
+                    assertThat(context).hasNotFailed();
                     MockMvc mvc = MockMvcBuilders.webAppContextSetup((WebApplicationContext) context
                             .getSourceApplicationContext()).build();
-                    context.getBean(TestProvider.class).status("ref-7", TransactionStatus.SUCCESSFUL);
-                    try {
-                        mvc.perform(request(HttpMethod.POST, "/mobile-money/webhooks/test-pay?ref=ref-7")
-                                .header("X-Test-Signature", "ok"));
-                        org.junit.jupiter.api.Assertions.fail("the listener failure must reach the server");
-                    } catch (Exception e) {
-                        assertThat(e).hasRootCauseInstanceOf(IllegalStateException.class);
-                    }
+                    context.getBean(MobileMoney.class).collect(PaymentRequest.builder().idempotencyKey("k2")
+                            .amount(2000).phoneNumber("655251245").merchantReference("order-2").description("d")
+                            .build());
+                    var sent = tara.findAll(postRequestedFor(urlEqualTo("/api/tara/mobilepay")));
+                    URI callback = URI.create(Json.text(Json.parse(sent.get(sent.size() - 1).getBody()),
+                            "webHookUrl"));
+                    String url = callback.getPath() + "?" + callback.getRawQuery();
+                    String body = "{\"productId\":\"order-2\",\"status\":\"SUCCESS\",\"amount\":2000,"
+                            + "\"phoneNumber\":\"237655251245\"}";
+
+                    mvc.perform(request(HttpMethod.POST, url).content(body))
+                            .andExpect(status().isInternalServerError());
+                    mvc.perform(request(HttpMethod.POST, url).content(body)).andExpect(status().isOk());
+                    mvc.perform(request(HttpMethod.POST, url).content(body)).andExpect(status().isBadRequest());
+                    assertThat(context.getBean(FailsOnce.class).recorded).hasSize(1);
                 });
     }
 
@@ -230,6 +258,35 @@ class WebhookEndpointTest {
         @EventListener
         void on(PaymentOutcomeEvent event) {
             received.add(event);
+        }
+    }
+
+    @Configuration(proxyBeanMethods = false)
+    static class FailingWithIllegalArgument {
+
+        @Bean
+        Object failingListener() {
+            return new Object() {
+                @EventListener
+                void on(PaymentOutcomeEvent event) {
+                    throw new IllegalArgumentException("merchant bug");
+                }
+            };
+        }
+    }
+
+    @Configuration(proxyBeanMethods = false)
+    static class FailsOnce {
+
+        final List<PaymentOutcomeEvent> recorded = new CopyOnWriteArrayList<>();
+        private final java.util.concurrent.atomic.AtomicBoolean failed = new java.util.concurrent.atomic.AtomicBoolean();
+
+        @EventListener
+        void on(PaymentOutcomeEvent event) {
+            if (failed.compareAndSet(false, true)) {
+                throw new IllegalStateException("database down");
+            }
+            recorded.add(event);
         }
     }
 

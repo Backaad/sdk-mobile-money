@@ -30,8 +30,10 @@ services:
     environment:
       MOBILE_MONEY_STORE: redis
       REDIS_HOST: redis
+    # Only on this computer: the demo API has no authentication. To reach it from a
+    # phone on the same network, use "8080:8080" for the time of the test.
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
 
 volumes:
   redis-data:

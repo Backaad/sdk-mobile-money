@@ -7,12 +7,15 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.RedisScript;
 
 /**
  * Pending transactions in Redis: a sorted set by next check time, and a hash of the transactions. Due
- * transactions are claimed atomically, so two instances never read the same one in the same round.
+ * transactions are claimed atomically, so two instances never read the same one in the same round. Both
+ * keys share the hash tag {@code {pending}}, so that the scripts also work on Redis Cluster.
  */
 public final class RedisPendingTransactionStore implements PendingTransactionStore {
 
@@ -24,6 +27,7 @@ public final class RedisPendingTransactionStore implements PendingTransactionSto
               redis.call('ZADD', KEYS[1], ARGV[3], id)
               local value = redis.call('HGET', KEYS[2], id)
               if value then
+                table.insert(result, id)
                 table.insert(result, value)
               else
                 redis.call('ZREM', KEYS[1], id)
@@ -39,6 +43,8 @@ public final class RedisPendingTransactionStore implements PendingTransactionSto
             return 0
             """, Long.class);
 
+    private static final Logger LOG = LoggerFactory.getLogger(RedisPendingTransactionStore.class);
+
     private final StringRedisTemplate redis;
     private final String schedule;
     private final String data;
@@ -51,8 +57,8 @@ public final class RedisPendingTransactionStore implements PendingTransactionSto
      */
     public RedisPendingTransactionStore(StringRedisTemplate redis, String keyPrefix) {
         this.redis = Objects.requireNonNull(redis, "redis");
-        this.schedule = Objects.requireNonNull(keyPrefix, "keyPrefix") + "pending:schedule";
-        this.data = keyPrefix + "pending:data";
+        this.schedule = Objects.requireNonNull(keyPrefix, "keyPrefix") + "{pending}:schedule";
+        this.data = keyPrefix + "{pending}:data";
     }
 
     @Override
@@ -67,9 +73,19 @@ public final class RedisPendingTransactionStore implements PendingTransactionSto
         List<?> values = redis.execute(CLAIM, List.of(schedule, data), Long.toString(now.toEpochMilli()),
                 Integer.toString(limit), Long.toString(nextCheckAt.toEpochMilli()));
         List<Entry> entries = new ArrayList<>();
-        if (values != null) {
-            for (Object value : values) {
-                entries.add(RedisCodec.readPendingEntry(String.valueOf(value)));
+        if (values == null) {
+            return entries;
+        }
+        for (int i = 0; i + 1 < values.size(); i += 2) {
+            String id = String.valueOf(values.get(i));
+            try {
+                entries.add(RedisCodec.readPendingEntry(String.valueOf(values.get(i + 1))));
+            } catch (RuntimeException e) {
+                // One unreadable entry must not stop the others: it is dropped, and logged.
+                LOG.error("Unreadable pending payment {} dropped ({}): reconcile it manually", id,
+                        e.getClass().getSimpleName());
+                redis.opsForZSet().remove(schedule, id);
+                redis.opsForHash().delete(data, id);
             }
         }
         return entries;

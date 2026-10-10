@@ -66,8 +66,21 @@ public final class RedisIdempotencyStore implements IdempotencyStore {
         String owner = UUID.randomUUID().toString();
         IdempotencyRecord record = new IdempotencyRecord(key, fingerprint, IdempotencyRecord.State.IN_PROGRESS,
                 pending, null, owner, now.plus(lease), now.plus(ttl));
-        String existing = redis.execute(RESERVE, List.of(prefix + key), RedisCodec.write(record),
-                Long.toString(ttl.toMillis()));
+        String json = RedisCodec.write(record);
+        String existing;
+        try {
+            existing = redis.execute(RESERVE, List.of(prefix + key), json, Long.toString(ttl.toMillis()));
+        } catch (RuntimeException e) {
+            // The script may have run although its answer was lost. Nothing has been sent to a provider yet, so
+            // our own reservation (identified by its unique owner token) can be removed: otherwise a retry would
+            // wait for it, then report an unknown outcome for 24 hours.
+            try {
+                redis.execute(DELETE_IF_SAME, List.of(prefix + key), json);
+            } catch (RuntimeException ignored) {
+                // Redis is still unreachable: the reservation expires with its lease.
+            }
+            throw e;
+        }
         return existing == null ? new Acquired(owner) : new Existing(RedisCodec.readIdempotencyRecord(existing));
     }
 

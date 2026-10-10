@@ -150,13 +150,34 @@ class MobileMoneyAutoConfigurationTest {
     @ValueSource(strings = {"https://localhost/mobile-money/webhooks", "https://127.0.0.1/mobile-money/webhooks",
         "https://192.168.1.10/mobile-money/webhooks", "https://10.0.0.2/mobile-money/webhooks",
         "https://[::1]/mobile-money/webhooks", "https://shop.local/mobile-money/webhooks",
-        "http://shop.example/mobile-money/webhooks"})
+        "http://localhost/mobile-money/webhooks"})
     void localOrPlainCallbackUrlIsRefusedInProduction(String url) {
         runner.withPropertyValues("mobile-money.mtn-momo.environment=production",
                 "mobile-money.mtn-momo.target-environment=mtncameroon",
                 "mobile-money.mtn-momo.collection.subscription-key=s", "mobile-money.mtn-momo.collection.api-user=u",
                 "mobile-money.mtn-momo.collection.api-key=k", "mobile-money.callback-base-url=" + url)
                 .run(context -> failsWith(context, "must be a public HTTPS URL in production"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"http://shop.example/mobile-money/webhooks", "https://shop.example/hooks/",
+        "https://shop.example/hooks?x=1", "https://user@shop.example/hooks"})
+    void unsafeCallbackUrlIsRefusedEverywhere(String url) {
+        runner.withPropertyValues(plus(MTN_SANDBOX, "mobile-money.callback-base-url=" + url))
+                .run(context -> failsWith(context, "mobile-money.callback-base-url must"));
+    }
+
+    @Test
+    void providerBeanWithAKnownIdAndACallbackUrlStarts() {
+        runner.withUserConfiguration(MtnBean.class)
+                .withPropertyValues("mobile-money.callback-base-url=https://shop.example/mobile-money/webhooks")
+                .run(context -> assertThat(context).hasNotFailed());
+    }
+
+    @Test
+    void taraAllowlistAloneEnablesTaraAndAsksForItsKey() {
+        runner.withPropertyValues("mobile-money.tara.allowed-callback-addresses=203.0.113.7")
+                .run(context -> failsWith(context, "mobile-money.tara.api-key is not set"));
     }
 
     @Test
@@ -202,6 +223,31 @@ class MobileMoneyAutoConfigurationTest {
                     assertThat(context).hasNotFailed();
                     assertThat(context.getBean(MobileMoney.class).providerIds()).containsExactly(ProviderId.SIMULATION);
                 });
+    }
+
+    @Test
+    void unresolvedPlaceholderIsNotTakenForAKey() {
+        runner.withPropertyValues("mobile-money.campay.environment=sandbox", "mobile-money.campay.username=u",
+                "mobile-money.campay.password=${CANARY_UNSET_VARIABLE_0001}")
+                .run(context -> failsWith(context, "mobile-money.campay.password contains an unresolved"));
+        runner.withPropertyValues(plus(MTN_SANDBOX,
+                "mobile-money.mtn-momo.collection.api-key=${CANARY_UNSET_VARIABLE_0002}"))
+                .run(context -> failsWith(context, "mobile-money.mtn-momo.collection.api-key contains"));
+    }
+
+    @Test
+    void emptyBooleansMeanOff() {
+        runner.withUserConfiguration(CustomProvider.class).withPropertyValues("mobile-money.simulation.enabled=",
+                "mobile-money.pending-check.enabled=").run(context -> {
+                    assertThat(context).hasNotFailed().doesNotHaveBean(PendingTransactionChecker.class);
+                    assertThat(context.getBean(MobileMoney.class).providerIds()).containsExactly(TestProvider.ID);
+                });
+    }
+
+    @Test
+    void ambiguousPendingCheckValueIsRefused() {
+        runner.withUserConfiguration(CustomProvider.class).withPropertyValues("mobile-money.pending-check.enabled=yes")
+                .run(context -> failsWith(context, "mobile-money.pending-check.enabled must be true or false"));
     }
 
     @Test
@@ -262,6 +308,17 @@ class MobileMoneyAutoConfigurationTest {
     @ValueSource(strings = {"shop.example", "8.8.8.8", "172.32.0.1", "2001:db8::1", "local.shop.example"})
     void publicAddressesAreRecognized(String host) {
         assertThat(ConfiguredProviders.isLocal(host)).isFalse();
+    }
+
+    @Configuration(proxyBeanMethods = false)
+    static class MtnBean {
+
+        @Bean
+        PaymentProvider mtnProvider() {
+            return io.github.backaad.mobilemoney.provider.mtnmomo.MtnMomoProvider.builder()
+                    .environment(io.github.backaad.mobilemoney.provider.mtnmomo.MtnMomoEnvironment.SANDBOX)
+                    .collection("s", "u", "k").build();
+        }
     }
 
     @Configuration(proxyBeanMethods = false)

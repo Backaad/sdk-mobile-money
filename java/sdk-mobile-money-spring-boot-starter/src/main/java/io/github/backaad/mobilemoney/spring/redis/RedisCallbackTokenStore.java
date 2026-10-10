@@ -7,7 +7,6 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
 /**
@@ -38,11 +37,11 @@ public final class RedisCallbackTokenStore implements CallbackTokenStore {
 
     @Override
     public void register(String tokenDigest, ExpectedCallback expected) {
-        long ttl = Duration.between(clock.instant(), expected.expiresAt()).toMillis();
-        if (ttl <= 0) {
+        Duration ttl = Duration.between(clock.instant(), expected.expiresAt());
+        if (ttl.isNegative() || ttl.isZero()) {
             return;
         }
-        redis.opsForValue().set(prefix + tokenDigest, RedisCodec.write(expected), ttl, TimeUnit.MILLISECONDS);
+        redis.opsForValue().set(prefix + tokenDigest, RedisCodec.write(expected), ttl);
     }
 
     @Override

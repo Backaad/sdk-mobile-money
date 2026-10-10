@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -281,7 +282,8 @@ public final class MobileMoney {
      *
      * <p>Suggested HTTP answers: 200 when an event is returned, 400 on
      * {@link WebhookVerificationException}, 503 on {@link ProviderUnavailableException} so that the
-     * provider can send the webhook again, 500 on {@link ConfigurationException} (fix the configuration).
+     * provider may send the webhook again (whether it does is to be confirmed for each provider), 500 on
+     * {@link ConfigurationException} (fix the configuration).
      *
      * @param provider the provider whose webhook URL was called
      * @param request the webhook as received
@@ -294,8 +296,29 @@ public final class MobileMoney {
      *     Campay webhook key)
      */
     public WebhookEvent handleWebhook(ProviderId provider, WebhookRequest request) {
+        return handleWebhook(provider, request, event -> { });
+    }
+
+    /**
+     * Verifies a webhook like {@link #handleWebhook(ProviderId, WebhookRequest)}, and hands the verified event
+     * to {@code onVerified} before a single-use callback token is consumed. If {@code onVerified} throws, the
+     * exception propagates and the token stays usable, so that the provider's next delivery is accepted: an
+     * outcome is never lost because the code recording it failed.
+     *
+     * @param provider the provider whose webhook URL was called
+     * @param request the webhook as received
+     * @param onVerified receives the verified event, for example to record the outcome
+     * @return the verified event
+     * @throws WebhookVerificationException if the webhook is not authentic, malformed, or does not match
+     *     the transaction the provider describes
+     * @throws ProviderUnavailableException if the status could not be read again; ask for a new delivery
+     * @throws ProviderAuthenticationException if the provider refused the credentials
+     * @throws ConfigurationException if the provider is not configured to verify webhooks
+     */
+    public WebhookEvent handleWebhook(ProviderId provider, WebhookRequest request, Consumer<WebhookEvent> onVerified) {
         Objects.requireNonNull(provider, "provider");
         Objects.requireNonNull(request, "request");
+        Objects.requireNonNull(onVerified, "onVerified");
         PaymentProvider p = providers.get(provider);
         if (p == null) {
             throw new WebhookVerificationException("No provider configured with id " + provider, provider);
@@ -313,7 +336,7 @@ public final class MobileMoney {
             throw new WebhookVerificationException("Malformed webhook", provider);
         }
         if (p.capabilities().webhookSignature() == WebhookSignature.CALLBACK_TOKEN) {
-            return callbackEvent(p, request, notification);
+            return callbackEvent(p, request, notification, onVerified);
         }
         if (!p.capabilities().statusQuery()) {
             throw new WebhookVerificationException(
@@ -347,9 +370,11 @@ public final class MobileMoney {
                     "The transaction type in the webhook does not match the provider's", provider);
         }
         // Only what the provider's API said: a type claimed by the webhook alone is not trusted.
-        return new WebhookEvent(provider, report.type(), report.providerReference(), report.merchantReference(),
+        WebhookEvent event = new WebhookEvent(provider, report.type(), report.providerReference(), report.merchantReference(),
                 report.amount(), report.currency(), report.status(), report.rawStatus(), Verification.STATUS_REREAD,
                 notification.claimedRawStatus());
+        onVerified.accept(event);
+        return event;
     }
 
     /**
@@ -357,7 +382,8 @@ public final class MobileMoney {
      * callbacks nor let the status be read. The token must be known, unused and unexpired, created for this
      * provider, and the callback must match the expected reference, amount and number.
      */
-    private WebhookEvent callbackEvent(PaymentProvider p, WebhookRequest request, WebhookNotification notification) {
+    private WebhookEvent callbackEvent(PaymentProvider p, WebhookRequest request, WebhookNotification notification,
+            Consumer<WebhookEvent> onVerified) {
         ProviderId provider = p.id();
         List<String> tokens;
         try {
@@ -385,13 +411,16 @@ public final class MobileMoney {
                     "The callback does not match the expected payment (reference, amount, number)", provider);
         }
         TransactionStatus status = p.mapClaimedStatus(notification.claimedRawStatus());
-        if (status != TransactionStatus.PENDING && callbackTokenStore.consume(digest).isEmpty()) {
-            // Another delivery used the token in the meantime.
-            throw new WebhookVerificationException("Unknown, used or expired callback token", provider);
-        }
-        return new WebhookEvent(provider, expected.type(), notification.providerReference(),
+        WebhookEvent event = new WebhookEvent(provider, expected.type(), notification.providerReference(),
                 expected.merchantReference(), expected.amount(), expected.currency(), status,
                 notification.claimedRawStatus(), Verification.CALLBACK_TOKEN, notification.claimedRawStatus());
+        // Recorded first: if that fails, the token stays usable for the provider's next delivery.
+        onVerified.accept(event);
+        if (status != TransactionStatus.PENDING && callbackTokenStore.consume(digest).isEmpty()) {
+            // Another delivery used the token in the meantime; its outcome was recorded too.
+            throw new WebhookVerificationException("Unknown, used or expired callback token", provider);
+        }
+        return event;
     }
 
     /**

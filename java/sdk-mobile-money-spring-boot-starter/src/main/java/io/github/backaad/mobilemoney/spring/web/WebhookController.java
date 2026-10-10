@@ -8,6 +8,7 @@ import io.github.backaad.mobilemoney.ProviderUnavailableException;
 import io.github.backaad.mobilemoney.WebhookRequest;
 import io.github.backaad.mobilemoney.WebhookVerificationException;
 import io.github.backaad.mobilemoney.spring.MobileMoneyWebhooks;
+import io.github.backaad.mobilemoney.spring.WebhookListenerException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,8 +29,10 @@ import org.springframework.web.bind.annotation.RestController;
  *
  * <p>Answers have no body, so that nothing about the verification leaks: {@code 200} once verified (even
  * if the payment is still pending), {@code 400} if the webhook is not authentic, {@code 404} for an unknown
- * provider, {@code 413} if the body is too large, {@code 503} if the status could not be read (the provider
- * sends the webhook again later), {@code 500} if the webhook cannot be verified because of the configuration.
+ * provider, {@code 413} if the body is too large, {@code 503} if the status could not be read, {@code 500}
+ * if a listener of the outcome failed or the configuration does not allow the verification. Whether and
+ * when each provider sends a webhook again after an error answer is to be confirmed (see
+ * {@code docs/providers/}); the pending-payment task covers the providers whose status can be read.
  *
  * <p>The path must be reachable without authentication and without CSRF token: with Spring Security, permit
  * it explicitly. Behind a reverse proxy, configure {@code server.forward-headers-strategy} so that the
@@ -80,7 +83,7 @@ public final class WebhookController {
             return status(HttpStatus.BAD_REQUEST);
         }
         if (body == null) {
-            return status(HttpStatus.PAYLOAD_TOO_LARGE);
+            return status(HttpStatus.CONTENT_TOO_LARGE);
         }
         WebhookRequest.Builder webhook = WebhookRequest.builder()
                 .method(request.getMethod())
@@ -93,20 +96,30 @@ public final class WebhookController {
                 webhook.header(name, value);
             }
         }
+        WebhookRequest built;
         try {
-            webhooks.handle(id, webhook.build());
+            built = webhook.build();
+        } catch (IllegalArgumentException e) {
+            return status(HttpStatus.BAD_REQUEST);
+        }
+        try {
+            webhooks.handle(id, built);
             return status(HttpStatus.OK);
+        } catch (WebhookListenerException e) {
+            // Authentic webhook, but the merchant's code failed: an error answer lets the provider retry.
+            LOG.error("{} webhook verified, but {}", id, e.getMessage());
+            return status(HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (WebhookVerificationException e) {
             LOG.warn("{} webhook refused: {}", id, e.getMessage());
             return status(HttpStatus.BAD_REQUEST);
         } catch (ProviderUnavailableException | ProviderAuthenticationException e) {
-            LOG.warn("{} webhook not processed, the status could not be read ({}): the provider will retry", id,
+            LOG.warn("{} webhook not processed, the status could not be read ({}): answered 503", id,
                     e.getClass().getSimpleName());
             return status(HttpStatus.SERVICE_UNAVAILABLE);
         } catch (ConfigurationException e) {
             LOG.error("{} webhook cannot be verified: {}", id, e.getMessage());
             return status(HttpStatus.INTERNAL_SERVER_ERROR);
-        } catch (MobileMoneyException | IllegalArgumentException e) {
+        } catch (MobileMoneyException e) {
             LOG.warn("{} webhook refused ({})", id, e.getClass().getSimpleName());
             return status(HttpStatus.BAD_REQUEST);
         }

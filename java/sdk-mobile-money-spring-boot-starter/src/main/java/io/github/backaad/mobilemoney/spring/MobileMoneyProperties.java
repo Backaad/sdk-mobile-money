@@ -100,7 +100,12 @@ public record MobileMoneyProperties(
      *
      * @param enabled turns the simulation on
      */
-    public record Simulation(@DefaultValue("false") boolean enabled) {
+    public record Simulation(@DefaultValue("false") Boolean enabled) {
+
+        /** An empty value (an unset environment variable) means off. */
+        public Simulation {
+            enabled = enabled != null && enabled;
+        }
     }
 
     /**
@@ -121,8 +126,13 @@ public record MobileMoneyProperties(
      *     reconciliation
      * @param batchSize payments read at most per run
      */
-    public record PendingCheck(@DefaultValue("false") boolean enabled, @DefaultValue("1m") Duration interval,
+    public record PendingCheck(@DefaultValue("false") Boolean enabled, @DefaultValue("1m") Duration interval,
             @DefaultValue("24h") Duration maxAge, @DefaultValue("50") int batchSize) {
+
+        /** An empty value (an unset environment variable) means off. */
+        public PendingCheck {
+            enabled = enabled != null && enabled;
+        }
     }
 
     /**

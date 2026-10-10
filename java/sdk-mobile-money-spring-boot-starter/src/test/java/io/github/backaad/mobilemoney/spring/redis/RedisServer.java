@@ -78,7 +78,9 @@ final class RedisServer {
     private void awaitReady() {
         for (int i = 0; i < 100; i++) {
             try (java.net.Socket socket = new java.net.Socket(host, port)) {
-                return;
+                if (socket.isConnected()) {
+                    return;
+                }
             } catch (IOException e) {
                 if (process != null && !process.isAlive()) {
                     throw new IllegalStateException("redis-server exited");

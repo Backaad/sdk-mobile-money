@@ -196,6 +196,31 @@ class RedisStoresTest {
     }
 
     @Test
+    void reservationWhoseAnswerIsLostIsRemoved() {
+        java.util.concurrent.atomic.AtomicBoolean lose = new java.util.concurrent.atomic.AtomicBoolean(true);
+        StringRedisTemplate flaky = new StringRedisTemplate(factory) {
+            @Override
+            public <T> T execute(org.springframework.data.redis.core.script.RedisScript<T> script, List<String> keys,
+                    Object... args) {
+                T result = super.execute(script, keys, args);
+                if (lose.getAndSet(false)) {
+                    throw new org.springframework.dao.QueryTimeoutException("answer lost");
+                }
+                return result;
+            }
+        };
+        flaky.afterPropertiesSet();
+        RedisIdempotencyStore store = new RedisIdempotencyStore(flaky, prefix, clock);
+
+        assertThatThrownBy(() -> store.reserve("k1", "fp", pending(null), Duration.ofMinutes(3), Duration.ofHours(24)))
+                .isInstanceOf(org.springframework.dao.QueryTimeoutException.class);
+
+        assertThat(store.find("k1")).isEmpty();
+        assertThat(store.reserve("k1", "fp", pending(null), Duration.ofMinutes(3), Duration.ofHours(24)))
+                .isInstanceOf(IdempotencyStore.Acquired.class);
+    }
+
+    @Test
     void unreadableRecordFailsClosed() {
         RedisIdempotencyStore store = new RedisIdempotencyStore(redis, prefix, clock);
         redis.opsForValue().set(prefix + "idempotency:k1", "{not json");
@@ -260,6 +285,20 @@ class RedisStoresTest {
         second.remove(ProviderId.CAMPAY, "ref-1");
         assertThat(second.claimDue(t0.plusSeconds(120), 10, t0.plusSeconds(180)))
                 .extracting(e -> e.transaction().providerReference()).containsExactly("ref-2");
+    }
+
+    @Test
+    void unreadablePendingEntryIsDroppedWithoutBlockingTheOthers() {
+        RedisPendingTransactionStore store = new RedisPendingTransactionStore(redis, prefix);
+        Instant t0 = now.get();
+        store.add(pending("ref-1"), t0, t0);
+        store.add(pending("ref-2"), t0, t0);
+        redis.opsForHash().put(prefix + "{pending}:data", "campay:ref-1", "{garbage");
+
+        List<PendingTransactionStore.Entry> claimed = store.claimDue(t0, 10, t0.plusSeconds(60));
+
+        assertThat(claimed).extracting(e -> e.transaction().providerReference()).containsExactly("ref-2");
+        assertThat(redis.opsForHash().hasKey(prefix + "{pending}:data", "campay:ref-1")).isFalse();
     }
 
     @Test

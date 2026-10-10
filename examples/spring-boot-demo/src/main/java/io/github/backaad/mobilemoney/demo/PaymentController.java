@@ -1,5 +1,6 @@
 package io.github.backaad.mobilemoney.demo;
 
+import io.github.backaad.mobilemoney.Currencies;
 import io.github.backaad.mobilemoney.IdempotencyKeyConflictException;
 import io.github.backaad.mobilemoney.InvalidPhoneNumberException;
 import io.github.backaad.mobilemoney.MobileMoney;
@@ -11,11 +12,14 @@ import io.github.backaad.mobilemoney.RequestInProgressException;
 import io.github.backaad.mobilemoney.Transaction;
 import io.github.backaad.mobilemoney.TransactionStatus;
 import io.github.backaad.mobilemoney.UnsupportedCapabilityException;
+import java.util.Currency;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -44,17 +48,20 @@ public class PaymentController {
 
     private final MobileMoney mobileMoney;
     private final Payments payments;
+    private final Currency currency;
 
-    PaymentController(MobileMoney mobileMoney, Payments payments) {
+    PaymentController(MobileMoney mobileMoney, Payments payments, @Value("${demo.currency:}") String currency) {
         this.mobileMoney = mobileMoney;
         this.payments = payments;
+        this.currency = currency == null || currency.isBlank() ? Currencies.XAF
+                : Currency.getInstance(currency.trim().toUpperCase(Locale.ROOT));
     }
 
     /**
      * What the app sends to start a payment.
      *
      * @param phoneNumber the customer's number, in any usual written form
-     * @param amount the amount in XAF
+     * @param amount the amount, in the demo's currency (XAF by default)
      * @param description shown to the customer, optional
      */
     record StartPayment(String phoneNumber, Long amount, String description) {
@@ -84,6 +91,7 @@ public class PaymentController {
             request = PaymentRequest.builder()
                     .idempotencyKey(idempotencyKey)
                     .amount(body.amount())
+                    .currency(currency)
                     .phoneNumber(body.phoneNumber())
                     .merchantReference(reference)
                     .description(body.description() == null || body.description().isBlank()

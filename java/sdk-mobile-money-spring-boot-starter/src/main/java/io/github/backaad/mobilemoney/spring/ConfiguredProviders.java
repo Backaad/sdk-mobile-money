@@ -10,6 +10,7 @@ import io.github.backaad.mobilemoney.provider.mtnmomo.MtnMomoProvider;
 import io.github.backaad.mobilemoney.provider.notchpay.NotchPayProvider;
 import io.github.backaad.mobilemoney.provider.simulation.SimulationProvider;
 import io.github.backaad.mobilemoney.provider.tara.TaraProvider;
+import java.lang.reflect.RecordComponent;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.UnknownHostException;
@@ -54,6 +55,7 @@ final class ConfiguredProviders {
      * @throws ConfigurationException if the configuration is incomplete or dangerous
      */
     static Result build(MobileMoneyProperties properties, List<PaymentProvider> custom) {
+        checkUnresolvedPlaceholders(properties, "mobile-money");
         Map<ProviderId, PaymentProvider> all = new LinkedHashMap<>();
         if (properties.simulation().enabled()) {
             if (anyRealProviderEnabled(properties) || !custom.isEmpty()) {
@@ -225,8 +227,12 @@ final class ConfiguredProviders {
                 .businessId(t.businessId())
                 .connectTimeout(properties.http().connectTimeout())
                 .requestTimeout(properties.http().requestTimeout());
-        if (t.allowedCallbackAddresses() != null && !t.allowedCallbackAddresses().isEmpty()) {
-            builder.allowedCallbackAddresses(t.allowedCallbackAddresses());
+        if (t.allowedCallbackAddresses() != null) {
+            List<String> addresses = t.allowedCallbackAddresses().stream()
+                    .filter(a -> a != null && !a.isBlank()).map(String::trim).toList();
+            if (!addresses.isEmpty()) {
+                builder.allowedCallbackAddresses(addresses);
+            }
         }
         LOG.warn("Tara is EXPERIMENTAL: see docs/providers/tara.md");
         return builder.build();
@@ -248,13 +254,26 @@ final class ConfiguredProviders {
         if (!url.isAbsolute() || url.getHost() == null) {
             throw new ConfigurationException("mobile-money.callback-base-url must be an absolute URL", null);
         }
-        boolean live = (all.containsKey(ProviderId.MTN_MOMO)
-                && properties.mtnMomo().environment() == MtnMomoEnvironment.PRODUCTION)
-                || all.containsKey(ProviderId.TARA);
-        boolean anyProduction = live || (all.containsKey(ProviderId.CAMPAY)
-                && properties.campay().environment() == CampayEnvironment.PRODUCTION);
+        if (url.getRawUserInfo() != null || url.getRawQuery() != null || url.getRawFragment() != null
+                || url.toString().endsWith("/")) {
+            throw new ConfigurationException("mobile-money.callback-base-url must not contain user information, a"
+                    + " query or a fragment, and must not end with '/'", null);
+        }
         boolean local = isLocal(url.getHost());
         boolean https = "https".equalsIgnoreCase(url.getScheme());
+        boolean loopback = isLoopback(url.getHost());
+        if (!https && !("http".equalsIgnoreCase(url.getScheme()) && loopback)) {
+            throw new ConfigurationException("mobile-money.callback-base-url must use HTTPS (plain HTTP is only"
+                    + " allowed on localhost)", null);
+        }
+        // Properties tell the environment of the providers they configure; a provider declared as a bean
+        // with the same id has no such property.
+        boolean mtnProduction = properties.mtnMomo() != null && enabled(properties.mtnMomo())
+                && properties.mtnMomo().environment() == MtnMomoEnvironment.PRODUCTION;
+        boolean campayProduction = properties.campay() != null && enabled(properties.campay())
+                && properties.campay().environment() == CampayEnvironment.PRODUCTION;
+        boolean live = mtnProduction || all.containsKey(ProviderId.TARA);
+        boolean anyProduction = live || campayProduction;
         if (live && (local || !https)) {
             throw new ConfigurationException("mobile-money.callback-base-url must be a public HTTPS URL in production"
                     + " (MTN MoMo production or Tara send it to the provider), not " + (local ? "a local address"
@@ -268,6 +287,11 @@ final class ConfiguredProviders {
             LOG.warn("mobile-money.callback-base-url does not end with mobile-money.webhook.path ({}): check that"
                     + " callbacks reach the webhook endpoint", path);
         }
+    }
+
+    private static boolean isLoopback(String host) {
+        String h = host.toLowerCase(Locale.ROOT);
+        return h.equals("localhost") || h.equals("127.0.0.1") || h.equals("[::1]") || h.equals("::1");
     }
 
     static boolean isLocal(String host) {
@@ -292,6 +316,43 @@ final class ConfiguredProviders {
         } catch (UnknownHostException e) {
             return true;
         }
+    }
+
+    /**
+     * Spring keeps an unresolvable {@code ${NAME}} as the value itself: a key written {@code ${CAMPAY_PASSWORD}}
+     * whose variable is not set would otherwise pass for a real key.
+     */
+    static void checkUnresolvedPlaceholders(Object value, String property) {
+        if (value == null) {
+            return;
+        }
+        if (value instanceof String || value instanceof URI) {
+            if (value.toString().contains("${")) {
+                throw new ConfigurationException(property + " contains an unresolved ${...} placeholder: the"
+                        + " environment variable it names is not set", null);
+            }
+            return;
+        }
+        if (value instanceof List<?> list) {
+            for (Object item : list) {
+                checkUnresolvedPlaceholders(item, property);
+            }
+            return;
+        }
+        if (value instanceof Record record) {
+            for (RecordComponent component : record.getClass().getRecordComponents()) {
+                try {
+                    checkUnresolvedPlaceholders(component.getAccessor().invoke(record),
+                            property + "." + kebab(component.getName()));
+                } catch (ReflectiveOperationException e) {
+                    throw new IllegalStateException(e);
+                }
+            }
+        }
+    }
+
+    private static String kebab(String name) {
+        return name.replaceAll("([a-z0-9])([A-Z])", "$1-$2").toLowerCase(Locale.ROOT);
     }
 
     private static void add(Map<ProviderId, PaymentProvider> all, PaymentProvider provider) {
@@ -321,7 +382,9 @@ final class ConfiguredProviders {
     }
 
     private static boolean enabled(MobileMoneyProperties.Tara t) {
-        return t != null && (t.enabled() != null ? t.enabled() : anySet(t.apiKey(), t.businessId(), t.baseUrl()));
+        return t != null && (t.enabled() != null ? t.enabled() : anySet(t.apiKey(), t.businessId(), t.baseUrl(),
+                t.allowedCallbackAddresses() == null || t.allowedCallbackAddresses().stream().allMatch(
+                        a -> a == null || a.isBlank()) ? null : "set"));
     }
 
     /** A product whose properties are all blank (unset environment variables) counts as absent. */

@@ -39,8 +39,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - optional task, off by default, that reads pending payments again.
   - See `docs/spring-boot.md`.
 - Core: `MobileMoney.Builder.callbackBaseUrl` (each request gets the callback
-  URL of the provider that processes it), `transactionListener`, and
-  `MobileMoney.providerIds()`.
+  URL of the provider that processes it), `transactionListener`,
+  `MobileMoney.providerIds()`, and `handleWebhook(provider, request, onVerified)`,
+  which records the outcome before a Tara single-use token is consumed.
 - Demo server (`examples/spring-boot-demo`): start a payment, read its status,
   receive webhooks; simulation by default; `docker-compose.yml` with Redis.
 - CI: Redis service for the starter tests, demo build and tests, and a Docker

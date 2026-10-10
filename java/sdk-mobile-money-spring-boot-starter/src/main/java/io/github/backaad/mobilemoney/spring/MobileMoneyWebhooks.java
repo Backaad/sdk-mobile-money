@@ -38,23 +38,30 @@ public final class MobileMoneyWebhooks {
     }
 
     /**
-     * Verifies a webhook and publishes the outcome. A listener that throws makes this method throw: the
-     * provider then sends the webhook again.
+     * Verifies a webhook and publishes the outcome. A Tara single-use callback token is consumed only after
+     * the listeners have run, so that the provider's next delivery is accepted if one of them fails.
      *
      * @param provider the provider the webhook claims to come from (from the endpoint path)
      * @param request the webhook as received
      * @return the verified event
      * @throws io.github.backaad.mobilemoney.WebhookVerificationException if the webhook is not authentic
      * @throws io.github.backaad.mobilemoney.ProviderUnavailableException if the status could not be read;
-     *     answer with an error so that the provider sends the webhook again
+     *     answer with an error so that the provider may send the webhook again
+     * @throws WebhookListenerException if a listener of the outcome event failed; answer with an error so
+     *     that the provider may send the webhook again
      */
     public WebhookEvent handle(ProviderId provider, WebhookRequest request) {
-        WebhookEvent event = mobileMoney.handleWebhook(provider, request);
-        if (event.status() != TransactionStatus.PENDING) {
-            events.publishEvent(PaymentOutcomeEvent.of(event));
-            if (pending != null && event.providerReference() != null) {
-                pending.remove(event.provider(), event.providerReference());
+        WebhookEvent event = mobileMoney.handleWebhook(provider, request, verified -> {
+            if (verified.status() != TransactionStatus.PENDING) {
+                try {
+                    events.publishEvent(PaymentOutcomeEvent.of(verified));
+                } catch (RuntimeException e) {
+                    throw new WebhookListenerException(e);
+                }
             }
+        });
+        if (event.status() != TransactionStatus.PENDING && pending != null && event.providerReference() != null) {
+            pending.remove(event.provider(), event.providerReference());
         }
         return event;
     }

@@ -40,3 +40,8 @@ mobile-money:
   tara:
     api-key: ${TARA_API_KEY:}
     business-id: ${TARA_BUSINESS_ID:}
+    allowed-callback-addresses: ${TARA_CALLBACK_ALLOWED_IPS:}
+
+demo:
+  # XAF when empty; EUR for the MTN MoMo public sandbox.
+  currency: ${DEMO_CURRENCY:}

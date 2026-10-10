@@ -148,6 +148,25 @@ class TaraProviderTest {
     }
 
     @Test
+    void tokenIsKeptWhenRecordingTheOutcomeFails() {
+        stubAccepted();
+        mobileMoney.collect(payment("1"));
+        String url = sentCallbackUrl();
+        String body = body("order-1", "SUCCESS", 2000, "237655251245");
+
+        assertThatThrownBy(() -> mobileMoney.handleWebhook(ProviderId.TARA, callback(url, body), event -> {
+            throw new IllegalStateException("database down");
+        })).isInstanceOf(IllegalStateException.class);
+        List<WebhookEvent> recorded = new java.util.ArrayList<>();
+        mobileMoney.handleWebhook(ProviderId.TARA, callback(url, body), recorded::add);
+        assertThatThrownBy(() -> mobileMoney.handleWebhook(ProviderId.TARA, callback(url, body), recorded::add))
+                .isInstanceOf(WebhookVerificationException.class);
+
+        assertThat(recorded).singleElement().satisfies(e -> assertThat(e.status())
+                .isEqualTo(TransactionStatus.SUCCESSFUL));
+    }
+
+    @Test
     void failedPaymentIsReportedAsFailed() {
         stubAccepted();
         mobileMoney.collect(payment("1"));
