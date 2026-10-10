@@ -4,22 +4,26 @@ import io.github.backaad.mobilemoney.callback.CallbackTokenStore;
 import io.github.backaad.mobilemoney.callback.ExpectedCallback;
 import io.github.backaad.mobilemoney.callback.InMemoryCallbackTokenStore;
 import io.github.backaad.mobilemoney.idempotency.Fingerprint;
-import io.github.backaad.mobilemoney.internal.CallbackTokens;
 import io.github.backaad.mobilemoney.idempotency.IdempotencyRecord;
 import io.github.backaad.mobilemoney.idempotency.IdempotencyStore;
 import io.github.backaad.mobilemoney.idempotency.InMemoryIdempotencyStore;
+import io.github.backaad.mobilemoney.internal.CallbackTokens;
+import io.github.backaad.mobilemoney.internal.Urls;
 import io.github.backaad.mobilemoney.provider.PaymentProvider;
 import io.github.backaad.mobilemoney.provider.StatusReport;
 import io.github.backaad.mobilemoney.provider.WebhookNotification;
+import java.net.URI;
 import java.time.Clock;
 import java.time.Duration;
-import java.util.Currency;
 import java.util.ArrayList;
+import java.util.Currency;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,6 +81,8 @@ public final class MobileMoney {
     private final Clock clock;
     private final Duration lease;
     private final Duration inProgressWait;
+    private final URI callbackBaseUrl;
+    private final TransactionListener listener;
 
     private MobileMoney(Builder builder) {
         this.providers = Map.copyOf(builder.providers);
@@ -88,6 +94,8 @@ public final class MobileMoney {
         this.clock = builder.clock;
         this.lease = builder.lease;
         this.inProgressWait = builder.inProgressWait;
+        this.callbackBaseUrl = builder.callbackBaseUrl;
+        this.listener = builder.listener;
     }
 
     /**
@@ -123,7 +131,8 @@ public final class MobileMoney {
                 provider -> collectWith(provider, request));
     }
 
-    private Transaction collectWith(PaymentProvider provider, PaymentRequest request) {
+    private Transaction collectWith(PaymentProvider provider, PaymentRequest original) {
+        PaymentRequest request = withCallback(original, callbackUrlFor(provider, original.callbackUrl()));
         if (provider.capabilities().webhookSignature() != WebhookSignature.CALLBACK_TOKEN) {
             return provider.collect(request);
         }
@@ -166,7 +175,32 @@ public final class MobileMoney {
         Transaction pending = new Transaction(chain.get(0).id(), TransactionType.PAYOUT, null,
                 request.merchantReference(), request.amount(), request.currency(), TransactionStatus.PENDING, null);
         return idempotent(request.idempotencyKey(), Fingerprint.of(request), pending, chain,
-                provider -> provider.payout(request));
+                provider -> provider.payout(withCallback(request, callbackUrlFor(provider, request.callbackUrl()))));
+    }
+
+    /** The request's callback URL, or the provider's own URL under the configured callback base URL. */
+    private URI callbackUrlFor(PaymentProvider provider, URI requested) {
+        if (requested != null || callbackBaseUrl == null) {
+            return requested;
+        }
+        return URI.create(callbackBaseUrl + "/" + provider.id().value());
+    }
+
+    private static PaymentRequest withCallback(PaymentRequest request, URI callbackUrl) {
+        if (Objects.equals(callbackUrl, request.callbackUrl())) {
+            return request;
+        }
+        return new PaymentRequest(request.idempotencyKey(), request.amount(), request.currency(),
+                request.phoneNumber(), request.merchantReference(), request.description(), callbackUrl);
+    }
+
+    private static PayoutRequest withCallback(PayoutRequest request, URI callbackUrl) {
+        if (Objects.equals(callbackUrl, request.callbackUrl())) {
+            return request;
+        }
+        return new PayoutRequest(request.idempotencyKey(), request.amount(), request.currency(),
+                request.phoneNumber(), request.beneficiaryName(), request.merchantReference(), request.description(),
+                callbackUrl);
     }
 
     /**
@@ -248,7 +282,8 @@ public final class MobileMoney {
      *
      * <p>Suggested HTTP answers: 200 when an event is returned, 400 on
      * {@link WebhookVerificationException}, 503 on {@link ProviderUnavailableException} so that the
-     * provider can send the webhook again, 500 on {@link ConfigurationException} (fix the configuration).
+     * provider may send the webhook again (whether it does is to be confirmed for each provider), 500 on
+     * {@link ConfigurationException} (fix the configuration).
      *
      * @param provider the provider whose webhook URL was called
      * @param request the webhook as received
@@ -261,8 +296,29 @@ public final class MobileMoney {
      *     Campay webhook key)
      */
     public WebhookEvent handleWebhook(ProviderId provider, WebhookRequest request) {
+        return handleWebhook(provider, request, event -> { });
+    }
+
+    /**
+     * Verifies a webhook like {@link #handleWebhook(ProviderId, WebhookRequest)}, and hands the verified event
+     * to {@code onVerified} before a single-use callback token is consumed. If {@code onVerified} throws, the
+     * exception propagates and the token stays usable, so that the provider's next delivery is accepted: an
+     * outcome is never lost because the code recording it failed.
+     *
+     * @param provider the provider whose webhook URL was called
+     * @param request the webhook as received
+     * @param onVerified receives the verified event, for example to record the outcome
+     * @return the verified event
+     * @throws WebhookVerificationException if the webhook is not authentic, malformed, or does not match
+     *     the transaction the provider describes
+     * @throws ProviderUnavailableException if the status could not be read again; ask for a new delivery
+     * @throws ProviderAuthenticationException if the provider refused the credentials
+     * @throws ConfigurationException if the provider is not configured to verify webhooks
+     */
+    public WebhookEvent handleWebhook(ProviderId provider, WebhookRequest request, Consumer<WebhookEvent> onVerified) {
         Objects.requireNonNull(provider, "provider");
         Objects.requireNonNull(request, "request");
+        Objects.requireNonNull(onVerified, "onVerified");
         PaymentProvider p = providers.get(provider);
         if (p == null) {
             throw new WebhookVerificationException("No provider configured with id " + provider, provider);
@@ -280,7 +336,7 @@ public final class MobileMoney {
             throw new WebhookVerificationException("Malformed webhook", provider);
         }
         if (p.capabilities().webhookSignature() == WebhookSignature.CALLBACK_TOKEN) {
-            return callbackEvent(p, request, notification);
+            return callbackEvent(p, request, notification, onVerified);
         }
         if (!p.capabilities().statusQuery()) {
             throw new WebhookVerificationException(
@@ -314,9 +370,11 @@ public final class MobileMoney {
                     "The transaction type in the webhook does not match the provider's", provider);
         }
         // Only what the provider's API said: a type claimed by the webhook alone is not trusted.
-        return new WebhookEvent(provider, report.type(), report.providerReference(), report.merchantReference(),
+        WebhookEvent event = new WebhookEvent(provider, report.type(), report.providerReference(), report.merchantReference(),
                 report.amount(), report.currency(), report.status(), report.rawStatus(), Verification.STATUS_REREAD,
                 notification.claimedRawStatus());
+        onVerified.accept(event);
+        return event;
     }
 
     /**
@@ -324,7 +382,8 @@ public final class MobileMoney {
      * callbacks nor let the status be read. The token must be known, unused and unexpired, created for this
      * provider, and the callback must match the expected reference, amount and number.
      */
-    private WebhookEvent callbackEvent(PaymentProvider p, WebhookRequest request, WebhookNotification notification) {
+    private WebhookEvent callbackEvent(PaymentProvider p, WebhookRequest request, WebhookNotification notification,
+            Consumer<WebhookEvent> onVerified) {
         ProviderId provider = p.id();
         List<String> tokens;
         try {
@@ -352,13 +411,25 @@ public final class MobileMoney {
                     "The callback does not match the expected payment (reference, amount, number)", provider);
         }
         TransactionStatus status = p.mapClaimedStatus(notification.claimedRawStatus());
-        if (status != TransactionStatus.PENDING && callbackTokenStore.consume(digest).isEmpty()) {
-            // Another delivery used the token in the meantime.
-            throw new WebhookVerificationException("Unknown, used or expired callback token", provider);
-        }
-        return new WebhookEvent(provider, expected.type(), notification.providerReference(),
+        WebhookEvent event = new WebhookEvent(provider, expected.type(), notification.providerReference(),
                 expected.merchantReference(), expected.amount(), expected.currency(), status,
                 notification.claimedRawStatus(), Verification.CALLBACK_TOKEN, notification.claimedRawStatus());
+        // Recorded first: if that fails, the token stays usable for the provider's next delivery.
+        onVerified.accept(event);
+        if (status != TransactionStatus.PENDING && callbackTokenStore.consume(digest).isEmpty()) {
+            // Another delivery used the token in the meantime; its outcome was recorded too.
+            throw new WebhookVerificationException("Unknown, used or expired callback token", provider);
+        }
+        return event;
+    }
+
+    /**
+     * Returns the identifiers of the configured providers.
+     *
+     * @return the identifiers
+     */
+    public Set<ProviderId> providerIds() {
+        return providers.keySet();
     }
 
     /**
@@ -440,6 +511,7 @@ public final class MobileMoney {
                 return unknownOutcome(key, owner, attempt, new IllegalStateException("Inconsistent provider result"));
             }
             finish(key, owner, IdempotencyRecord.State.COMPLETED, result, null);
+            notifyListener(result);
             return result;
         }
         throw new IllegalStateException("No provider to try");
@@ -450,7 +522,20 @@ public final class MobileMoney {
                 cause.getClass().getSimpleName(), pending.providerReference() == null
                         ? "wait for the provider's webhook" : "read its status later");
         finish(key, owner, IdempotencyRecord.State.OUTCOME_UNKNOWN, pending, null);
+        notifyListener(pending);
         return pending;
+    }
+
+    private void notifyListener(Transaction transaction) {
+        if (listener == null) {
+            return;
+        }
+        try {
+            listener.onTransaction(transaction);
+        } catch (RuntimeException e) {
+            LOG.error("Transaction listener failed ({}); the payment itself is not affected",
+                    e.getClass().getSimpleName());
+        }
     }
 
     private Transaction replay(IdempotencyRecord record, String fingerprint) {
@@ -537,6 +622,8 @@ public final class MobileMoney {
         private Clock clock = Clock.systemUTC();
         private Duration lease = Duration.ofMinutes(3);
         private Duration inProgressWait = Duration.ofSeconds(35);
+        private URI callbackBaseUrl;
+        private TransactionListener listener;
 
         private Builder() {
         }
@@ -552,6 +639,31 @@ public final class MobileMoney {
             if (providers.putIfAbsent(provider.id(), provider) != null) {
                 throw new ConfigurationException("Provider " + provider.id() + " is configured twice", provider.id());
             }
+            return this;
+        }
+
+        /**
+         * Sets the public base URL of the merchant's webhook endpoint. A request without its own
+         * {@code callbackUrl} then gets {@code <base>/<provider id>}, for example
+         * {@code https://shop.example/mobile-money/webhooks/mtn-momo}, for the provider that actually
+         * processes it (failover included). Must be HTTPS, except for localhost.
+         *
+         * @param callbackBaseUrl the base URL, without trailing slash, query or fragment, or {@code null}
+         * @return this builder
+         */
+        public Builder callbackBaseUrl(URI callbackBaseUrl) {
+            this.callbackBaseUrl = callbackBaseUrl;
+            return this;
+        }
+
+        /**
+         * Sets a listener told about each new transaction, for example to follow pending payments.
+         *
+         * @param listener the listener, or {@code null}
+         * @return this builder
+         */
+        public Builder transactionListener(TransactionListener listener) {
+            this.listener = listener;
             return this;
         }
 
@@ -669,6 +781,18 @@ public final class MobileMoney {
             }
             if (failover.size() != failover.stream().distinct().count()) {
                 throw new ConfigurationException("A failover provider is listed twice", null);
+            }
+            if (callbackBaseUrl != null) {
+                try {
+                    Urls.requireSafeCallbackUrl(callbackBaseUrl);
+                } catch (IllegalArgumentException e) {
+                    throw new ConfigurationException("callbackBaseUrl " + e.getMessage(), null);
+                }
+                if (callbackBaseUrl.getRawQuery() != null || callbackBaseUrl.getRawFragment() != null
+                        || callbackBaseUrl.toString().endsWith("/")) {
+                    throw new ConfigurationException(
+                            "callbackBaseUrl must not end with '/' or contain a query or a fragment", null);
+                }
             }
             if (callbackTokenLifetime.isNegative() || callbackTokenLifetime.isZero()) {
                 throw new ConfigurationException("callbackTokenLifetime must be positive", null);

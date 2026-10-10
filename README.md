@@ -7,9 +7,10 @@ interface, whatever the provider behind it.
 [![codecov](https://codecov.io/gh/Backaad/sdk-mobile-money/graph/badge.svg)](https://codecov.io/gh/Backaad/sdk-mobile-money)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-> **Work in progress, not released yet.** The Java core and the providers below
-> exist (see [CHANGELOG](CHANGELOG.md)); the Spring Boot starter and the Flutter
-> package come next. The first release will be `0.1.0`.
+> **Work in progress, not released yet.** The Java core, the providers below and
+> the [Spring Boot starter](docs/spring-boot.md) exist (see
+> [CHANGELOG](CHANGELOG.md)); the Flutter package comes next. The first release
+> will be `0.1.0`.
 
 ## Providers
 
@@ -42,6 +43,9 @@ configures it, and only when nothing reached the first provider.
 
 # Flutter
 (cd flutter/sdk_mobile_money && flutter pub get && flutter analyze && flutter test)
+
+# Demo server and Redis (simulation by default)
+(cd examples/spring-boot-demo && docker compose up --build)
 ```
 
 ## License

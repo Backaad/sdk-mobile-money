@@ -1,0 +1,10 @@
+# Never send local secrets or build output to the Docker build.
+.env
+.env.*
+!.env.example
+.git
+**/target
+flutter/**/build
+flutter/**/.dart_tool
+**/.idea
+**/*.iml

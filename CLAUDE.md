@@ -43,15 +43,22 @@ docs/                                     architecture, security, docs/providers
 # Java (from java/): build, tests, coverage report
 ./mvnw verify
 
+# Demo server (from java/, after ./mvnw install)
+./mvnw -f ../examples/spring-boot-demo/pom.xml verify
+
 # Flutter (from flutter/sdk_mobile_money/)
 flutter pub get
 flutter analyze
 flutter test
 ```
 
-CI (`.github/workflows/ci.yml`) runs the Java build on JDK 17 and 21, and
-`flutter analyze` + `flutter test`, and uploads coverage to Codecov. Keep it
-green.
+CI (`.github/workflows/ci.yml`) runs the Java build on JDK 17 and 21 with a
+Redis service, the demo server's tests, a Docker Compose smoke test of the demo
+image, and `flutter analyze` + `flutter test`, and uploads coverage to Codecov.
+Keep it green.
+
+The starter's Redis tests use `REDIS_URL`, or a local `redis-server`; they are
+skipped when neither exists, except in CI (`MOBILE_MONEY_REQUIRE_REDIS=true`).
 
 Sandbox tests read the provider keys from environment variables and are
 skipped when they are missing: to run them, load your own `.env` first
@@ -68,7 +75,9 @@ skipped when they are missing: to run them, load your own `.env` first
   uses. Jackson stays an implementation detail: no Jackson type in the public
   API.
 - **Starter**: Spring Boot 4 integration. Configuration under `mobile-money.*`,
-  validated at startup with clear messages.
+  validated at startup with clear messages that name the property and never a
+  value. Redis is optional (`spring-data-redis` is an optional dependency); the
+  stores' Redis format is explicit JSON with a version field (`RedisCodec`).
 - Dependency and plugin versions are managed in `java/pom.xml`.
 
 ## Core design (Java)

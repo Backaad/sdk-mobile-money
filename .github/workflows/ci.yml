@@ -27,6 +27,17 @@ jobs:
     defaults:
       run:
         working-directory: java
+    services:
+      # The starter's Redis stores are tested against a real Redis server.
+      redis:
+        image: redis:7.4-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v7
 
@@ -35,10 +46,19 @@ jobs:
           distribution: temurin
           java-version: ${{ matrix.java }}
           cache: maven
-          cache-dependency-path: java/**/pom.xml
+          cache-dependency-path: |
+            java/**/pom.xml
+            examples/spring-boot-demo/pom.xml
 
       - name: Build and test
-        run: ./mvnw --batch-mode --no-transfer-progress verify
+        env:
+          REDIS_URL: redis://localhost:6379
+          # The Redis tests must run here: fail instead of skipping them.
+          MOBILE_MONEY_REQUIRE_REDIS: 'true'
+        run: ./mvnw --batch-mode --no-transfer-progress install
+
+      - name: Build and test the demo server
+        run: ./mvnw --batch-mode --no-transfer-progress -f ../examples/spring-boot-demo/pom.xml verify
 
       - name: Upload coverage report
         if: matrix.java == '21'
@@ -59,6 +79,42 @@ jobs:
           disable_search: true
           flags: java
           fail_ci_if_error: false
+
+  demo-image:
+    name: Demo image (docker compose)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: examples/spring-boot-demo
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build the image
+        run: docker compose build
+
+      - name: Start the server and Redis, then start a payment
+        run: |
+          docker compose up -d --wait --wait-timeout 180 redis
+          docker compose up -d demo
+          # Ready when an unknown payment answers 404.
+          for i in $(seq 1 60); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' localhost:8080/api/payments/none || true)
+            [ "$code" = "404" ] && break
+            sleep 2
+          done
+          status=$(curl -s -o response.json -w '%{http_code}' -X POST localhost:8080/api/payments \
+            -H 'Idempotency-Key: ci-0000-0000-0001' -H 'Content-Type: application/json' \
+            -d '{"phoneNumber": "+237 670 12 34 56", "amount": 500}')
+          cat response.json
+          test "$status" = "201"
+          grep -q '"status":"PENDING"' response.json
+          docker compose exec -T redis redis-cli --scan --pattern 'mobile-money:idempotency:*' | grep -q ci-0000
+
+      - name: Logs
+        if: always()
+        run: docker compose logs
 
   flutter:
     name: Flutter
