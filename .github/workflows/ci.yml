@@ -21,6 +21,9 @@ jobs:
       fail-fast: false
       matrix:
         java: ['17', '21']
+    permissions:
+      contents: read
+      id-token: write # Codecov upload through OIDC, no token stored
     defaults:
       run:
         working-directory: java
@@ -45,9 +48,21 @@ jobs:
           path: java/*/target/site/jacoco/
           if-no-files-found: ignore
 
+      - name: Upload coverage to Codecov
+        if: matrix.java == '21'
+        uses: codecov/codecov-action@v5
+        with:
+          use_oidc: true
+          files: java/sdk-mobile-money-core/target/site/jacoco/jacoco.xml,java/sdk-mobile-money-spring-boot-starter/target/site/jacoco/jacoco.xml
+          flags: java
+          fail_ci_if_error: false
+
   flutter:
     name: Flutter
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # Codecov upload through OIDC, no token stored
     defaults:
       run:
         working-directory: flutter/sdk_mobile_money
@@ -66,4 +81,12 @@ jobs:
         run: flutter analyze
 
       - name: Test
-        run: flutter test
+        run: flutter test --coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          use_oidc: true
+          files: flutter/sdk_mobile_money/coverage/lcov.info
+          flags: flutter
+          fail_ci_if_error: false

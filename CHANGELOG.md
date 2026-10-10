@@ -9,6 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Project skeleton: Maven build for the Java core and the Spring Boot starter,
-  empty Flutter package, CI on GitHub Actions (JDK 17 and 21, Flutter),
-  `.env.example` and `CLAUDE.md`.
+- Project skeleton: Maven build for the Java core (Jackson 3) and the Spring
+  Boot 4 starter, empty Flutter package, CI on GitHub Actions (JDK 17 and 21,
+  Flutter) with coverage sent to Codecov, `.env.example` and `CLAUDE.md`.

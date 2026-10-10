@@ -1,0 +1,19 @@
+# Coverage is reported, not enforced: Codecov statuses never block a pull request.
+coverage:
+  status:
+    project:
+      default:
+        informational: true
+    patch:
+      default:
+        informational: true
+
+flags:
+  java:
+    paths:
+      - java/
+    carryforward: true
+  flutter:
+    paths:
+      - flutter/
+    carryforward: true

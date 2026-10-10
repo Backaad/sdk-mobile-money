@@ -4,6 +4,7 @@ Collect and disburse Mobile Money payments in Cameroon through a single
 interface, whatever the provider behind it.
 
 [![CI](https://github.com/Backaad/sdk-mobile-money/actions/workflows/ci.yml/badge.svg)](https://github.com/Backaad/sdk-mobile-money/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/Backaad/sdk-mobile-money/graph/badge.svg)](https://codecov.io/gh/Backaad/sdk-mobile-money)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 > **Work in progress.** Nothing is usable yet: the repository only contains the

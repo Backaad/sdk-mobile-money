@@ -16,9 +16,10 @@ countries and providers later.
   shipped in it ends up stolen. The core is a server-side Java library. The
   Flutter package only talks to the merchant's server, never to providers.
 - **No secret in the repository or in conversations.** No key, token or
-  signature in code, tests, fixtures, docs or commit messages. Real values live
-  in a local `.env` (ignored by git) or in GitHub Actions secrets, under the
-  names listed in [`.env.example`](.env.example).
+  signature in code, tests, fixtures, docs or commit messages. The project has
+  no keys of its own and the CI runs without any: each developer puts their own
+  sandbox keys in a local `.env` (ignored by git), under the names listed in
+  [`.env.example`](.env.example).
 - **Never present as verified something that is not.** Anything not confirmed
   in a provider's official documentation stays marked "to be confirmed", in
   code comments, docs and the README provider table.
@@ -49,7 +50,12 @@ flutter test
 ```
 
 CI (`.github/workflows/ci.yml`) runs the Java build on JDK 17 and 21, and
-`flutter analyze` + `flutter test`. Keep it green.
+`flutter analyze` + `flutter test`, and uploads coverage to Codecov. Keep it
+green.
+
+Sandbox tests read the provider keys from environment variables and are
+skipped when they are missing: to run them, load your own `.env` first
+(`set -a; . ./.env; set +a`).
 
 ## Java
 
@@ -58,7 +64,10 @@ CI (`.github/workflows/ci.yml`) runs the Java build on JDK 17 and 21, and
 - **Core**: no Spring. Runtime dependencies are limited to the JDK HTTP client
   (`java.net.http`), Jackson and SLF4J. The Maven enforcer fails the build on
   any other runtime dependency; adding one needs the maintainer's approval.
-- **Starter**: Spring Boot integration. Configuration under `mobile-money.*`,
+- **Core JSON**: Jackson 3 (`tools.jackson`), the version line Spring Boot 4
+  uses. Jackson stays an implementation detail: no Jackson type in the public
+  API.
+- **Starter**: Spring Boot 4 integration. Configuration under `mobile-money.*`,
   validated at startup with clear messages.
 - Dependency and plugin versions are managed in `java/pom.xml`.
 
