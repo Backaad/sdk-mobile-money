@@ -62,7 +62,8 @@ public final class CampayProvider implements PaymentProvider {
     private static final ProviderId CAMPAY = ProviderId.CAMPAY;
     private static final ProviderCapabilities CAPABILITIES = new ProviderCapabilities(true, true, true,
             WebhookSignature.JWT_HS256, Set.of(Currencies.XAF));
-    private static final Pattern REFERENCE = Pattern.compile("[A-Za-z0-9._-]{1,100}");
+    // Starts with a letter or digit, so that "." or ".." can never become a path segment.
+    private static final Pattern REFERENCE = Pattern.compile("[A-Za-z0-9][A-Za-z0-9._-]{0,99}");
     private static final int MAX_ERROR_MESSAGE_LENGTH = 200;
     private static final List<String> WEBHOOK_FIELDS = List.of(
             "signature", "reference", "external_reference", "status", "endpoint", "amount", "currency");
@@ -308,8 +309,9 @@ public final class CampayProvider implements PaymentProvider {
         } catch (JacksonException | IllegalArgumentException e) {
             // No readable details: a generic message is used.
         }
-        String safeMessage = redact(sanitize(message));
-        String safeCode = redact(sanitize(code));
+        // Redact the full text first: a secret cut in half by the truncation would no longer match.
+        String safeMessage = sanitize(redact(message));
+        String safeCode = sanitize(redact(code));
         String text = "Campay refused the request (HTTP " + response.statusCode() + ")"
                 + (safeCode != null ? " " + safeCode : "") + (safeMessage != null ? ": " + safeMessage : "");
         return new PaymentRejectedException(text, CAMPAY, safeCode);

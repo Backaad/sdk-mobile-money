@@ -14,7 +14,8 @@ import java.util.Objects;
  * <p>Webhooks can arrive several times: handle the same (provider, providerReference, status) only once.
  *
  * @param provider the provider that sent the webhook and processed the transaction
- * @param type collection or payout, or {@code null} when the provider does not say
+ * @param type collection or payout, as returned by the provider's API, or {@code null} when it does not
+ *     say (Campay): take it from your own record of the transaction
  * @param providerReference the provider's reference
  * @param merchantReference the merchant's reference, or {@code null} when the provider did not return one
  * @param amount amount reported by the provider, or {@code null} if it did not report it

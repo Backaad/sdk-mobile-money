@@ -1,5 +1,6 @@
 package io.github.backaad.mobilemoney.provider.campay;
 
+import io.github.backaad.mobilemoney.MobileMoneyException;
 import io.github.backaad.mobilemoney.ProviderAuthenticationException;
 import io.github.backaad.mobilemoney.ProviderId;
 import io.github.backaad.mobilemoney.ProviderUnavailableException;
@@ -12,7 +13,10 @@ import java.net.http.HttpResponse;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tools.jackson.core.JacksonException;
@@ -21,7 +25,7 @@ import tools.jackson.databind.node.ObjectNode;
 
 /**
  * Obtains Campay access tokens and keeps them until they expire, minus a safety margin of one minute.
- * Only one thread fetches a token at a time.
+ * Only one thread fetches a token at a time; a failed fetch is not cached.
  */
 final class CampayTokens {
 
@@ -38,9 +42,11 @@ final class CampayTokens {
     private final String password;
     private final Clock clock;
     private final Duration timeout;
-    private final ReentrantLock lock = new ReentrantLock();
+    private final Duration waitLimit;
+    private final Object guard = new Object();
 
     private volatile CachedToken current;
+    private CompletableFuture<CachedToken> inFlight;
 
     CampayTokens(HttpCaller http, URI tokenUri, String username, String password, Clock clock, Duration timeout) {
         this.http = http;
@@ -49,10 +55,13 @@ final class CampayTokens {
         this.password = password;
         this.clock = clock;
         this.timeout = timeout;
+        // Long enough for the fetch in flight to finish or fail on its own timeout.
+        this.waitLimit = timeout.multipliedBy(2).plusSeconds(1);
     }
 
     /**
-     * Returns a valid token, fetching a new one if needed.
+     * Returns a valid token, fetching a new one if needed. Only one fetch runs at a time: concurrent
+     * callers wait, for a bounded time, for its outcome, success or failure, instead of fetching again.
      *
      * @throws ProviderAuthenticationException if Campay refuses the credentials
      * @throws ProviderUnavailableException if Campay cannot be reached; the operation that needed the
@@ -63,16 +72,46 @@ final class CampayTokens {
         if (token != null && token.isValidAt(clock.instant())) {
             return token.value();
         }
-        lock.lock();
-        try {
+        CompletableFuture<CachedToken> fetch;
+        boolean leader = false;
+        synchronized (guard) {
             token = current;
             if (token != null && token.isValidAt(clock.instant())) {
                 return token.value();
             }
-            current = fetch();
-            return current.value();
-        } finally {
-            lock.unlock();
+            if (inFlight == null) {
+                inFlight = new CompletableFuture<>();
+                leader = true;
+            }
+            fetch = inFlight;
+        }
+        if (leader) {
+            try {
+                CachedToken fresh = fetch();
+                current = fresh;
+                fetch.complete(fresh);
+            } catch (RuntimeException e) {
+                fetch.completeExceptionally(e);
+            } finally {
+                synchronized (guard) {
+                    inFlight = null;
+                }
+            }
+        }
+        try {
+            return fetch.get(waitLimit.toMillis(), TimeUnit.MILLISECONDS).value();
+        } catch (ExecutionException e) {
+            if (e.getCause() instanceof MobileMoneyException cause) {
+                throw cause;
+            }
+            throw new ProviderUnavailableException("Could not obtain a Campay access token", CAMPAY, false, null);
+        } catch (TimeoutException e) {
+            throw new ProviderUnavailableException(
+                    "Timed out waiting for a Campay access token", CAMPAY, false, null);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new ProviderUnavailableException(
+                    "Interrupted while waiting for a Campay access token", CAMPAY, false, null);
         }
     }
 
@@ -82,14 +121,11 @@ final class CampayTokens {
      * @param refused the token that got a 401
      */
     void invalidate(String refused) {
-        lock.lock();
-        try {
+        synchronized (guard) {
             CachedToken token = current;
             if (token != null && ConstantTime.equals(token.value(), refused)) {
                 current = null;
             }
-        } finally {
-            lock.unlock();
         }
     }
 

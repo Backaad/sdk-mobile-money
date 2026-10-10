@@ -102,13 +102,18 @@ public final class InMemoryIdempotencyStore implements IdempotencyStore {
 
     @Override
     public boolean release(String key, String ownerToken) {
+        Instant now = clock.instant();
         boolean[] removed = new boolean[1];
         records.computeIfPresent(key, (k, current) -> {
-            if (isOwnedInProgress(current, ownerToken)) {
-                removed[0] = true;
-                return null;
+            if (!isOwnedInProgress(current, ownerToken)) {
+                return current;
             }
-            return current;
+            if (!now.isBefore(current.leaseUntil())) {
+                // Other callers may already have been told that the outcome is unknown: keep it that way.
+                return current.finish(IdempotencyRecord.State.OUTCOME_UNKNOWN, current.transaction(), null);
+            }
+            removed[0] = true;
+            return null;
         });
         return removed[0];
     }

@@ -20,7 +20,7 @@ public class PaymentRejectedException extends MobileMoneyException {
      * @param providerCode the provider's error code, or {@code null}
      */
     public PaymentRejectedException(String message, ProviderId provider, String providerCode) {
-        super(message, provider, null);
+        super(message != null ? message : "The provider refused the request", provider, null);
         this.providerCode = providerCode;
     }
 

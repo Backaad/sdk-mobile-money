@@ -231,6 +231,7 @@ public final class MobileMoney {
 
         StatusReport report;
         try {
+            // The claimed type only selects the endpoint to read; it never ends up in the event.
             report = p.fetchStatus(notification.type(), notification.providerReference());
         } catch (TransactionNotFoundException e) {
             throw new WebhookVerificationException("The webhook refers to a transaction unknown to " + provider,
@@ -254,8 +255,8 @@ public final class MobileMoney {
             throw new WebhookVerificationException(
                     "The transaction type in the webhook does not match the provider's", provider);
         }
-        TransactionType type = report.type() != null ? report.type() : notification.type();
-        return new WebhookEvent(provider, type, report.providerReference(), report.merchantReference(),
+        // Only what the provider's API said: a type claimed by the webhook alone is not trusted.
+        return new WebhookEvent(provider, report.type(), report.providerReference(), report.merchantReference(),
                 report.amount(), report.currency(), report.status(), report.rawStatus(), Verification.STATUS_REREAD,
                 notification.claimedRawStatus());
     }
@@ -302,7 +303,8 @@ public final class MobileMoney {
             result = call.get();
         } catch (PaymentRejectedException e) {
             finish(key, owner, IdempotencyRecord.State.REJECTED, null, new IdempotencyRecord.Rejection(
-                    e.provider().orElse(pending.provider()), e.providerCode().orElse(null), e.getMessage()));
+                    e.provider().orElse(pending.provider()), e.providerCode().orElse(null),
+                    Objects.requireNonNullElse(e.getMessage(), "Refused by " + pending.provider())));
             throw e;
         } catch (ProviderUnavailableException e) {
             if (!e.requestMayHaveBeenProcessed()) {

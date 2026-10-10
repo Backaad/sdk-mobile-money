@@ -12,7 +12,9 @@ import java.util.Optional;
  *   <li>{@link #reserve} is atomic: for a given key, exactly one caller gets {@link Acquired} until the
  *       record expires.</li>
  *   <li>{@link #finish} and {@link #release} only act if the record is still {@code IN_PROGRESS} and the
- *       owner token matches, so a late caller can never overwrite a newer record.</li>
+ *       owner token matches, so a late caller can never overwrite a newer record. Once the lease has
+ *       expired, {@link #release} turns the record into {@code OUTCOME_UNKNOWN} instead of deleting it:
+ *       other callers may already have been told that the outcome is unknown.</li>
  *   <li>An exception means the store could not be used. The SDK then fails closed: if {@link #reserve}
  *       fails, the provider is not called.</li>
  *   <li>Records are never evicted before they expire: evicting one would let the same request through
