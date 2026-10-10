@@ -15,7 +15,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import tools.jackson.databind.JsonNode;
 
-/** Runs the reference numbers of testdata/phone-numbers.json, which the Dart tests will read too. */
+/** Runs the reference numbers of testdata/phone-numbers.json, which the Dart tests read too. */
 class PhoneNumberReferenceTest {
 
     private static final PrefixTable TABLE = PrefixTable.cameroonDefault();

@@ -1,0 +1,24 @@
+name: sdk_mobile_money_demo
+description: >-
+  Demo app of sdk_mobile_money: pays through the Spring Boot demo server.
+publish_to: none
+version: 0.1.0
+
+environment:
+  sdk: ^3.8.0
+  flutter: ">=3.32.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  sdk_mobile_money:
+    path: ../../flutter/sdk_mobile_money
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  http: ^1.5.0
+
+flutter:
+  uses-material-design: true

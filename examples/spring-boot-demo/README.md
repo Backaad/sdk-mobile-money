@@ -8,6 +8,8 @@ A small server that uses the SDK through its Spring Boot starter:
 | `GET /api/payments/{reference}` | Reads a payment; asks the provider when it is still pending. |
 | `GET/POST/PUT /mobile-money/webhooks/{provider}` | Receives the providers' webhooks (from the starter). |
 
+The [Flutter demo app](../flutter-demo) uses the first two routes.
+
 It runs in **simulation mode** by default: it talks to nobody and never confirms a
 payment, so a payment stays `PENDING`. To go further, use a provider's sandbox.
 

@@ -1,5 +1,5 @@
 {
-  "description": "Reference data for the Java tests and, once the Flutter package has its phone module, the Dart tests. Both sides must: accept every 'valid' input with exactly the expected result (operator null = not detected with the default prefix table); reject every 'invalid' input with the given reason; and use exactly 'defaultPrefixTable' as their default operator table.",
+  "description": "Reference data shared by the Java tests and the Dart tests. Both sides must: accept every 'valid' input with exactly the expected result (operator null = not detected with the default prefix table); reject every 'invalid' input with the given reason; and use exactly 'defaultPrefixTable' as their default operator table.",
   "defaultPrefixTable": {
     "MTN": ["650-654", "670-679", "680-683"],
     "ORANGE": ["655-659", "690-699"]
@@ -31,11 +31,17 @@
     {"input": "699999999", "e164": "+237699999999", "national": "699999999", "operator": "ORANGE"},
     {"input": "620123456", "e164": "+237620123456", "national": "620123456", "operator": null},
     {"input": "660123456", "e164": "+237660123456", "national": "660123456", "operator": null},
-    {"input": "640123456", "e164": "+237640123456", "national": "640123456", "operator": null}
+    {"input": "640123456", "e164": "+237640123456", "national": "640123456", "operator": null},
+    {"input": "670/12/34/56", "e164": "+237670123456", "national": "670123456", "operator": "MTN"},
+    {"input": "\t670123456\n", "e164": "+237670123456", "national": "670123456", "operator": "MTN"},
+    {"input": "670\u202f12\u202f34\u202f56", "e164": "+237670123456", "national": "670123456", "operator": "MTN"},
+    {"input": "\u3000690123456\u2009", "e164": "+237690123456", "national": "690123456", "operator": "ORANGE"}
   ],
   "invalid": [
     {"input": "", "reason": "MISSING", "note": "empty"},
     {"input": "   ", "reason": "MISSING", "note": "blank"},
+    {"input": "\t\n", "reason": "MISSING", "note": "tab and new line only"},
+    {"input": "\u00a0\u00a0", "reason": "INVALID_CHARACTERS", "note": "no-break spaces only: not blank for Java, and nothing is left once separators are removed"},
     {"input": "67012345", "reason": "WRONG_LENGTH", "note": "8 digits"},
     {"input": "6701234567", "reason": "WRONG_LENGTH", "note": "10 digits"},
     {"input": "+23767012345", "reason": "WRONG_LENGTH", "note": "8 national digits"},
@@ -52,6 +58,9 @@
     {"input": "++237670123456", "reason": "INVALID_CHARACTERS", "note": "double plus"},
     {"input": "+", "reason": "INVALID_CHARACTERS", "note": "plus only"},
     {"input": "670 123 456 #", "reason": "INVALID_CHARACTERS", "note": "invalid character"},
-    {"input": "\u0666\u0667\u0660\u0661\u0662\u0663\u0664\u0665\u0666", "reason": "INVALID_CHARACTERS", "note": "non-ASCII digits"}
+    {"input": "\u0666\u0667\u0660\u0661\u0662\u0663\u0664\u0665\u0666", "reason": "INVALID_CHARACTERS", "note": "non-ASCII digits"},
+    {"input": "\u0085670123456", "reason": "INVALID_CHARACTERS", "note": "next line (U+0085) is not a separator"},
+    {"input": "\ufeff670123456", "reason": "INVALID_CHARACTERS", "note": "byte order mark is not a separator"},
+    {"input": "670123456                                ", "reason": "WRONG_LENGTH", "note": "more than 40 characters"}
   ]
 }
