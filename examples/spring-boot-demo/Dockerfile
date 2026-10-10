@@ -1,6 +1,11 @@
 # Demo server image. Build context: the root of the repository (see docker-compose.yml),
 # because the demo uses the SDK built from this repository.
 FROM eclipse-temurin:21-jdk AS build
+# The Maven wrapper needs unzip: without it, it downloads the .tar.gz distribution, whose SHA-256 differs from
+# the one pinned in java/.mvn/wrapper/maven-wrapper.properties (the .zip's), and refuses it.
+RUN apt-get update \
+    && apt-get install --yes --no-install-recommends unzip \
+    && rm -rf /var/lib/apt/lists/*
 WORKDIR /src
 COPY java/ java/
 COPY testdata/ testdata/
