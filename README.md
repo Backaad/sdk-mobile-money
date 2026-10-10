@@ -7,8 +7,9 @@ interface, whatever the provider behind it.
 [![codecov](https://codecov.io/gh/Backaad/sdk-mobile-money/graph/badge.svg)](https://codecov.io/gh/Backaad/sdk-mobile-money)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-> **Work in progress.** Nothing is usable yet: the repository only contains the
-> project skeleton. The first release will be `0.1.0`.
+> **Work in progress, not released yet.** The Java core and the Campay provider
+> exist (see [CHANGELOG](CHANGELOG.md)); the other providers, the Spring Boot
+> starter and the Flutter package come next. The first release will be `0.1.0`.
 
 ## Layout
 
