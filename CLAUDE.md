@@ -71,6 +71,28 @@ skipped when they are missing: to run them, load your own `.env` first
   validated at startup with clear messages.
 - Dependency and plugin versions are managed in `java/pom.xml`.
 
+## Core design (Java)
+
+- `MobileMoney` is the entry point. It owns idempotency, status re-reads and
+  webhook verification; each provider implements `provider.PaymentProvider`
+  and only talks to its API.
+- Provider adapters classify every failure. `ProviderUnavailableException`
+  with `requestMayHaveBeenProcessed == false` only when the request certainly
+  did not reach the provider (connection refused, token failure, 408/429).
+  Everything else after sending (timeout, 5xx, unreadable answer, unexpected
+  exception) is an unknown outcome: the facade returns a PENDING transaction
+  without provider reference and never sends it again.
+- Never retry a POST, except the single replay after a 401 with a renewed
+  token. Every HTTP call has a timeout; redirects are not followed.
+- Webhook events only carry what the provider's API returned; the claimed
+  status is kept for diagnostics. Signatures go through `internal.ConstantTime`.
+- Logs contain the method, path, status and duration of calls, never headers,
+  query strings or bodies. Never chain Jackson or HTTP client exceptions:
+  their messages can contain response content.
+- Reference phone numbers and the default prefix table live in
+  `testdata/phone-numbers.json`. The Dart tests must read the same file once
+  the Flutter package has its phone module.
+
 ## Flutter
 
 - Package `sdk_mobile_money`. It never embeds a provider key and never calls a
@@ -90,7 +112,10 @@ skipped when they are missing: to run them, load your own `.env` first
 - Failover to another provider happens only if the merchant configured it, and
   the result says which provider actually processed the payment.
 - The phone prefix table is configurable. Its default value must be checked
-  against ARTP data.
+  against the numbering plan of ART (Agence de Régulation des
+  Télécommunications, the Cameroon regulator; the brief says "ARTP", which is
+  Senegal's). Blocks not confirmed by every source are left out of the
+  default: the number is accepted, its operator is not guessed.
 - Simulation mode talks to nobody and never confirms a payment. Full flows are
   tested against sandboxes.
 
