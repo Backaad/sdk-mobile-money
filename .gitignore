@@ -1,0 +1,28 @@
+# Secrets: only .env.example is committed.
+.env
+.env.*
+!.env.example
+
+# Maven
+target/
+
+# Flutter / Dart
+.dart_tool/
+.flutter-plugins-dependencies
+build/
+coverage/
+
+# IDEs
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.classpath
+.project
+.settings/
+.factorypath
+
+# OS
+.DS_Store
+Thumbs.db
