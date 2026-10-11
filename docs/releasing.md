@@ -63,10 +63,11 @@ The sources and Javadoc jars are built on every pull request (CI, JDK 21), and
 
 1. Sign in to [pub.dev](https://pub.dev) with a Google account.
 2. The first version is published by hand, from a machine with the Flutter SDK
-   (no emulator needed), on the release tag:
+   (no emulator needed), on the release tag. Done: 0.1.1 was published this
+   way on 2026-10-11 (0.1.0 was not published to pub.dev).
 
    ```sh
-   git checkout v0.1.0
+   git checkout v0.1.1
    cd flutter/sdk_mobile_money
    flutter pub publish
    ```
@@ -121,15 +122,10 @@ since anyone who can push such a tag can publish.
    scripts/set-version.sh 0.1.1-SNAPSHOT     # Flutter package: 0.1.1-dev
    ```
 
-   with `## 0.1.1-dev` at the top of the Flutter package CHANGELOG.
+   with a `## 0.1.1-dev` section at the top of the Flutter package CHANGELOG.
 
 The README of the Flutter package is the pub.dev page of the version: it must
 not say whether the package is published, since that changes after the tag.
 
-Once the package is on pub.dev, the README can get its badge (the Maven Central
-one is there since 0.1.0):
-
-```md
-[![Maven Central](https://img.shields.io/maven-central/v/io.github.backaad/sdk-mobile-money-core)](https://central.sonatype.com/artifact/io.github.backaad/sdk-mobile-money-core)
-[![pub.dev](https://img.shields.io/pub/v/sdk_mobile_money)](https://pub.dev/packages/sdk_mobile_money)
-```
+The README shows the Maven Central and pub.dev badges: they follow the latest
+published versions by themselves.

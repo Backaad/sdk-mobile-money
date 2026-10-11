@@ -6,13 +6,13 @@ interface, whatever the provider behind it: MTN MoMo, Campay, NotchPay or Tara.
 [![CI](https://github.com/Backaad/sdk-mobile-money/actions/workflows/ci.yml/badge.svg)](https://github.com/Backaad/sdk-mobile-money/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/Backaad/sdk-mobile-money/graph/badge.svg)](https://codecov.io/gh/Backaad/sdk-mobile-money)
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.backaad/sdk-mobile-money-core)](https://central.sonatype.com/artifact/io.github.backaad/sdk-mobile-money-core)
+[![pub.dev](https://img.shields.io/pub/v/sdk_mobile_money)](https://pub.dev/packages/sdk_mobile_money)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 *[Lire en français](README.fr.md)*
 
-> **Released** on Maven Central: the badge above shows the latest version. The
-> Flutter package is not on pub.dev yet: meanwhile, use the
-> [git dependency](flutter/sdk_mobile_money/README.md#install).
+> **Released** on Maven Central and pub.dev: the badges above show the latest
+> versions.
 
 <p align="center">
   <img src="flutter/sdk_mobile_money/screenshots/demo.gif" width="300"
@@ -129,9 +129,6 @@ dependencies:
   sdk_mobile_money: ^0.1.1
 ```
 
-Until it is on pub.dev, use a
-[git dependency](flutter/sdk_mobile_money/README.md#install).
-
 ```dart
 final client = MobileMoneyClient(
   paymentsUrl: Uri.parse('https://shop.example/api/payments'),
@@ -180,7 +177,7 @@ Each of the eleven rules behind these points has its tests: see
 
 ## Roadmap
 
-- **0.1.0**: first release, on Maven Central. Next: the Flutter package on pub.dev.
+- **0.1.x**: first releases, on Maven Central and pub.dev.
 - Confirm everything marked "to be confirmed" against the sandboxes and the
   official documentation: provider details, and the default phone prefix table
   against the numbering plan of ART, the Cameroon regulator.

@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Flutter package: an example (`example/example.md`) for the Example tab of
+  pub.dev, the only pub points 0.1.1 missed (150/160).
+
+### Changed
+
+- README: the Flutter package is on pub.dev (badge). Development versions:
+  `0.1.2-SNAPSHOT`, Flutter package `0.1.2-dev`.
+
 ## [0.1.1] - 2026-10-11
 
 ### Fixed

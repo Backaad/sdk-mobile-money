@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.2-dev
+
+- An example (`example/example.md`), shown in the Example tab of pub.dev.
+- The `CancellationToken` constructor is documented.
+
 ## 0.1.1
 
 - README: installation from pub.dev, or from the repository at a release tag.

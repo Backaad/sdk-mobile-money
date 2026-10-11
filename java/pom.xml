@@ -6,7 +6,7 @@
 
     <groupId>io.github.backaad</groupId>
     <artifactId>sdk-mobile-money-parent</artifactId>
-    <version>0.1.1</version>
+    <version>0.1.2-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>sdk-mobile-money</name>

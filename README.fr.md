@@ -7,13 +7,13 @@ Tara.
 [![CI](https://github.com/Backaad/sdk-mobile-money/actions/workflows/ci.yml/badge.svg)](https://github.com/Backaad/sdk-mobile-money/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/Backaad/sdk-mobile-money/graph/badge.svg)](https://codecov.io/gh/Backaad/sdk-mobile-money)
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.backaad/sdk-mobile-money-core)](https://central.sonatype.com/artifact/io.github.backaad/sdk-mobile-money-core)
+[![pub.dev](https://img.shields.io/pub/v/sdk_mobile_money)](https://pub.dev/packages/sdk_mobile_money)
 [![Licence : MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 *[Read in English](README.md)*
 
-> **Publié** sur Maven Central : le badge ci-dessus indique la dernière
-> version. Le paquet Flutter n'est pas encore sur pub.dev : en attendant,
-> utilisez la [dépendance git](flutter/sdk_mobile_money/README.md#install).
+> **Publié** sur Maven Central et pub.dev : les badges ci-dessus indiquent les
+> dernières versions.
 
 <p align="center">
   <img src="flutter/sdk_mobile_money/screenshots/demo.gif" width="300"
@@ -134,9 +134,6 @@ dependencies:
   sdk_mobile_money: ^0.1.1
 ```
 
-Tant qu'il n'est pas sur pub.dev, utilisez une
-[dépendance git](flutter/sdk_mobile_money/README.md#install).
-
 ```dart
 final client = MobileMoneyClient(
   paymentsUrl: Uri.parse('https://shop.example/api/payments'),
@@ -189,7 +186,7 @@ suivez [SECURITY.md](SECURITY.md), jamais une issue publique.
 
 ## Feuille de route
 
-- **0.1.0** : première version, sur Maven Central. Ensuite : le paquet Flutter sur pub.dev.
+- **0.1.x** : premières versions, sur Maven Central et pub.dev.
 - Confirmer tout ce qui est marqué « à confirmer » avec les bacs à sable et la
   documentation officielle : les détails des opérateurs, et la table des
   préfixes par défaut avec le plan de numérotation de l'ART, le régulateur
