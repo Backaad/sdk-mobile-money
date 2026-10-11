@@ -142,6 +142,13 @@ jobs:
       - name: Test
         run: flutter test --coverage
 
+      - name: Demo app
+        working-directory: examples/flutter-demo
+        run: |
+          flutter pub get
+          flutter analyze
+          flutter test
+
       - name: Upload coverage to Codecov
         continue-on-error: true
         uses: codecov/codecov-action@v7

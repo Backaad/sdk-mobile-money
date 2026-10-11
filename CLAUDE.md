@@ -46,7 +46,7 @@ docs/                                     architecture, security, docs/providers
 # Demo server (from java/, after ./mvnw install)
 ./mvnw -f ../examples/spring-boot-demo/pom.xml verify
 
-# Flutter (from flutter/sdk_mobile_money/)
+# Flutter (from flutter/sdk_mobile_money/, then from examples/flutter-demo/)
 flutter pub get
 flutter analyze
 flutter test
@@ -54,7 +54,8 @@ flutter test
 
 CI (`.github/workflows/ci.yml`) runs the Java build on JDK 17 and 21 with a
 Redis service, the demo server's tests, a Docker Compose smoke test of the demo
-image, and `flutter analyze` + `flutter test`, and uploads coverage to Codecov.
+image, `flutter analyze` + `flutter test` for the package and the demo app, and
+uploads coverage to Codecov.
 Keep it green.
 
 The starter's Redis tests use `REDIS_URL`, or a local `redis-server`; they are
@@ -99,17 +100,26 @@ skipped when they are missing: to run them, load your own `.env` first
   query strings or bodies. Never chain Jackson or HTTP client exceptions:
   their messages can contain response content.
 - Reference phone numbers and the default prefix table live in
-  `testdata/phone-numbers.json`. The Dart tests must read the same file once
-  the Flutter package has its phone module.
+  `testdata/phone-numbers.json`, read by both the Java and the Dart tests: a
+  rule change goes in both languages and in that file.
 
 ## Flutter
 
 - Package `sdk_mobile_money`. It never embeds a provider key and never calls a
   provider API: it only calls the merchant's server.
 - Phone number normalization and provider detection follow exactly the same
-  rules as the Java core. Both sides test against the same shared JSON file of
-  reference numbers.
-- The UI component must work in light and dark themes.
+  rules as the Java core, including which characters count as separators
+  (Java's `Character.isWhitespace` and `isSpaceChar`, not Dart's `trim`). Both
+  sides test against the same shared JSON file of reference numbers.
+- Dependencies: `http` only. The client talks to the server contract of the
+  demo server (`POST <payments>` with `Idempotency-Key`, `GET
+  <payments>/<reference>`), documented in the package README.
+- A retry sends the same `PaymentRequest`, hence the same idempotency key. A
+  transient error or a timeout while following a payment never shows it as
+  failed. The client logs nothing.
+- The UI component must work in light and dark themes: colors come from the
+  theme's `ColorScheme`, and the widget tests check the contrast of each state
+  in both themes. Official operator logos are not bundled (trademarks).
 
 ## Payment domain rules
 

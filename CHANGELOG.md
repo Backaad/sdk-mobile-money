@@ -9,6 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Flutter package (`flutter/sdk_mobile_money`), which only talks to the
+  merchant's server:
+  - phone numbers: validation, normalization and operator detection with the
+    rules of the Java core, tested against `testdata/phone-numbers.json`;
+  - `MobileMoneyClient`: starts a payment with an idempotency key (the same
+    for every retry of a request), reads it, and follows it until it is
+    settled, with a maximum waiting time and cancellation; a transient error
+    or a timeout never shows a payment as failed;
+  - `MobileMoneyCheckout`: optional payment form (number, detected operator,
+    amount, pay button, "confirm on your phone" message), light and dark
+    themes, English and French texts;
+  - unit tests, widget tests in light and dark themes with a contrast check,
+    and the server contract documented in the package README.
+- Demo app (`examples/flutter-demo`, Android and iOS) that pays through the
+  demo server; CI runs its analysis and tests.
+- `testdata/phone-numbers.json`: more reference numbers on separators
+  (tab, new line, narrow no-break space, ideographic space) and on characters
+  that are not separators (U+0085, byte order mark), and an input longer than
+  40 characters.
 - Java core (`sdk-mobile-money-core`):
   - `MobileMoney` entry point: collect, payout, status and webhook handling,
     whatever the provider.
