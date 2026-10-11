@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.2-dev
+
+- No change yet.
+
 ## 0.1.1
 
 - README: installation from pub.dev, or from the repository at a release tag.
