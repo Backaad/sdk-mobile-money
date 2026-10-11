@@ -26,7 +26,8 @@ sources instead:
 | `setup-java@v6`: `server-id`, `server-username-env-var`, `server-password-env-var` write a `<server>` to `settings.xml` | the action's `action.yml` | checked |
 | pub.dev: the first version of a package must be published by hand; automated publishing is then enabled on the package's admin page, with the repository and a tag pattern containing `{{version}}`; only a workflow triggered by a tag push can publish | the source of the dart.dev page "Automated publishing" (`dart-lang/site-www`) | checked |
 | `dart-lang/setup-dart/.github/workflows/publish.yml@v1`: sets up Dart and Flutter, runs `dart pub publish --dry-run` then `dart pub publish -f` in `working-directory` | the workflow's source | checked |
-| Central Portal: how the `io.github.backaad` namespace is verified, where the user token is generated, whether the public GPG key must be on a key server, which POM fields are required | the Sonatype documentation | **to be confirmed** |
+| Central Portal: the namespace `io.github.backaad` is registered and shown as **Verified**, and a user token exists | the maintainer's Central Portal account (2026-10-11) | checked |
+| Central Portal: whether the public GPG key must be on a key server, and which one; which POM fields are required | the Sonatype documentation | **to be confirmed** (the first deployment's validation will tell) |
 
 The sources and Javadoc jars are built on every pull request (CI, JDK 21), and
 `flutter pub publish --dry-run` runs on every pull request too.
@@ -34,13 +35,14 @@ The sources and Javadoc jars are built on every pull request (CI, JDK 21), and
 ## Once: Maven Central
 
 1. Create an account on [central.sonatype.com](https://central.sonatype.com)
-   and register the namespace `io.github.backaad`. For an `io.github.<user>`
-   namespace, the verification goes through the GitHub account (to be
-   confirmed in the Central Portal).
-2. Generate a **user token** in the Central Portal. Add its two parts as
-   repository secrets (Settings > Secrets and variables > Actions):
+   and register the namespace `io.github.backaad`. Done: the namespace is
+   verified. Namespaces are tied to the sign-in method: always sign in the
+   same way.
+2. Generate a **user token** in the Central Portal (done). Add its two parts
+   as repository secrets (Settings > Secrets and variables > Actions):
    `MAVEN_CENTRAL_USERNAME` and `MAVEN_CENTRAL_PASSWORD`. The password of the
-   account itself is never used.
+   account itself is never used. Then keep the token only in a password
+   manager, never in a file next to the repository.
 3. Create a GPG key for signing, and publish its public part on a key server
    (Central checks the signatures against public keys; to be confirmed which
    servers):
