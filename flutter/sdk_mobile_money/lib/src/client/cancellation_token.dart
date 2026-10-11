@@ -5,6 +5,9 @@ import 'dart:async';
 /// Cancelling only stops the waiting: the payment itself is not cancelled, and
 /// the customer may still approve it.
 final class CancellationToken {
+  /// Creates a token that is not cancelled yet.
+  CancellationToken();
+
   final Completer<void> _cancelled = Completer<void>();
 
   /// Whether [cancel] was called.

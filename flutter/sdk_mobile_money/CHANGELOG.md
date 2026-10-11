@@ -2,7 +2,8 @@
 
 ## 0.1.2-dev
 
-- No change yet.
+- An example (`example/example.md`), shown in the Example tab of pub.dev.
+- The `CancellationToken` constructor is documented.
 
 ## 0.1.1
 
