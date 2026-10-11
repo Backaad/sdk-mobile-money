@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-10-11
+
+First release.
+
 ### Added
 
 - Documentation: `README.md` rewritten as the project's front page (demo
@@ -114,3 +118,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Project skeleton: Maven build for the Java core (Jackson 3) and the Spring
   Boot 4 starter, empty Flutter package, CI on GitHub Actions (JDK 17 and 21,
   Flutter) with coverage sent to Codecov, `.env.example` and `CLAUDE.md`.
+
+[Unreleased]: https://github.com/Backaad/sdk-mobile-money/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/Backaad/sdk-mobile-money/releases/tag/v0.1.0

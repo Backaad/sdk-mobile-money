@@ -89,8 +89,9 @@ since anyone who can push such a tag can publish.
    scripts/set-version.sh 0.1.0
    ```
 
-   - `CHANGELOG.md`: rename `## [Unreleased]` to `## [0.1.0] - <date>` and add
-     a new empty `## [Unreleased]` above it;
+   - `CHANGELOG.md`: rename `## [Unreleased]` to `## [0.1.0] - <date>` (the
+     day of the tag), add a new empty `## [Unreleased]` above it, and update
+     the comparison links at the bottom of the file;
    - `flutter/sdk_mobile_money/CHANGELOG.md`: rename `## 0.1.0-dev` to
      `## 0.1.0`.
 
