@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.1-dev
+
+- README: installation from pub.dev, or from the repository at a release tag.
+
 ## 0.1.0
 
 First release.

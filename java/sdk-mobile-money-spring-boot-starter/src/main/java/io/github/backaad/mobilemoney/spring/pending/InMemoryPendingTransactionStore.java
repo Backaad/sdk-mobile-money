@@ -15,6 +15,10 @@ public final class InMemoryPendingTransactionStore implements PendingTransaction
 
     private final Map<String, Slot> slots = new LinkedHashMap<>();
 
+    /** Creates an empty store. */
+    public InMemoryPendingTransactionStore() {
+    }
+
     private record Slot(Entry entry, Instant nextCheckAt) {
     }
 

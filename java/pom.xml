@@ -6,7 +6,7 @@
 
     <groupId>io.github.backaad</groupId>
     <artifactId>sdk-mobile-money-parent</artifactId>
-    <version>0.1.0</version>
+    <version>0.1.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>sdk-mobile-money</name>
@@ -274,6 +274,10 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
                         <version>${maven-javadoc-plugin.version}</version>
+                        <configuration>
+                            <!-- Every public element documented: the CI builds this profile on each pull request. -->
+                            <failOnWarnings>true</failOnWarnings>
+                        </configuration>
                         <executions>
                             <execution>
                                 <id>attach-javadocs</id>

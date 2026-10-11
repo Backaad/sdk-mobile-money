@@ -39,6 +39,10 @@ public class MobileMoneyAutoConfiguration {
     private static final Logger LOG = LoggerFactory.getLogger(MobileMoneyAutoConfiguration.class);
     private static final Clock CLOCK = Clock.systemUTC();
 
+    /** Created by Spring Boot. */
+    public MobileMoneyAutoConfiguration() {
+    }
+
     /**
      * The in-memory idempotency store, when no other store is configured.
      *

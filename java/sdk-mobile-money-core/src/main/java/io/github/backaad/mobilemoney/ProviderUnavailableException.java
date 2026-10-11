@@ -12,7 +12,9 @@ public class ProviderUnavailableException extends MobileMoneyException {
 
     private static final long serialVersionUID = 1L;
 
+    /** Whether the request may have reached the provider. */
     private final boolean requestMayHaveBeenProcessed;
+    /** The provider's reference, when it is known. */
     private final String providerReference;
 
     /**

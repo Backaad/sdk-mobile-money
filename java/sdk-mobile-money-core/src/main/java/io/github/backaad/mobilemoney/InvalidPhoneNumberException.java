@@ -21,6 +21,7 @@ public class InvalidPhoneNumberException extends MobileMoneyException {
         NOT_MOBILE
     }
 
+    /** Why the number was refused. */
     private final Reason reason;
 
     /**

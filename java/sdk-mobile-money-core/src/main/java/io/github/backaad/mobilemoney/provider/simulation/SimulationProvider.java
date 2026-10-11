@@ -28,6 +28,10 @@ public final class SimulationProvider implements PaymentProvider {
     /** Raw status reported for every simulated transaction. */
     public static final String RAW_STATUS = "SIMULATED_PENDING";
 
+    /** Creates the simulation provider. */
+    public SimulationProvider() {
+    }
+
     private static final ProviderCapabilities CAPABILITIES = new ProviderCapabilities(true, true, true,
             WebhookSignature.NONE, Set.of(Currencies.XAF, Currencies.XOF));
 

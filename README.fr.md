@@ -6,12 +6,14 @@ Tara.
 
 [![CI](https://github.com/Backaad/sdk-mobile-money/actions/workflows/ci.yml/badge.svg)](https://github.com/Backaad/sdk-mobile-money/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/Backaad/sdk-mobile-money/graph/badge.svg)](https://codecov.io/gh/Backaad/sdk-mobile-money)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.backaad/sdk-mobile-money-core)](https://central.sonatype.com/artifact/io.github.backaad/sdk-mobile-money-core)
 [![Licence : MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 *[Read in English](README.md)*
 
-> **Pas encore publié.** Tout ce qui suit fonctionne depuis ce dépôt ; la
-> première version, `0.1.0`, est en préparation pour Maven Central et pub.dev.
+> **La version 0.1.0 est sortie** sur Maven Central. Le paquet Flutter n'est
+> pas encore sur pub.dev : en attendant, utilisez la
+> [dépendance git](flutter/sdk_mobile_money/README.md#install).
 
 <p align="center">
   <img src="flutter/sdk_mobile_money/screenshots/demo.gif" width="300"
@@ -60,9 +62,6 @@ confirmer.
        <version>0.1.0</version>
    </dependency>
    ```
-
-   Tant que `0.1.0` n'est pas sur Maven Central, installez-le depuis ce dépôt
-   avec `(cd java && ./mvnw install -DskipTests)` et utilisez `0.1.0-SNAPSHOT`.
 
 2. Configurez un opérateur. Les clés viennent de l'environnement, jamais d'un
    fichier versionné :
@@ -190,7 +189,7 @@ suivez [SECURITY.md](SECURITY.md), jamais une issue publique.
 
 ## Feuille de route
 
-- **0.1.0** : première version sur Maven Central et pub.dev.
+- **0.1.0** : première version, sur Maven Central. Ensuite : le paquet Flutter sur pub.dev.
 - Confirmer tout ce qui est marqué « à confirmer » avec les bacs à sable et la
   documentation officielle : les détails des opérateurs, et la table des
   préfixes par défaut avec le plan de numérotation de l'ART, le régulateur
