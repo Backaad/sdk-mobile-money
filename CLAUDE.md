@@ -34,7 +34,9 @@ java/
 flutter/sdk_mobile_money/                 Dart package for pub.dev
 examples/spring-boot-demo/                demo server (simulation by default)
 examples/flutter-demo/                    demo app using the demo server
-docs/                                     architecture, security, docs/providers/
+docs/                                     architecture, security, releasing, docs/providers/
+scripts/set-version.sh                    sets every published version at once
+.github/workflows/release.yml             publishes on a vX.Y.Z tag (docs/releasing.md)
 ```
 
 ## Commands
@@ -50,13 +52,22 @@ docs/                                     architecture, security, docs/providers
 flutter pub get
 flutter analyze
 flutter test
+
+# Release checks, without publishing anything
+./mvnw -Prelease -Dgpg.skip -DskipTests package   # from java/: sources and Javadoc jars
+flutter pub publish --dry-run                     # from flutter/sdk_mobile_money/
 ```
 
 CI (`.github/workflows/ci.yml`) runs the Java build on JDK 17 and 21 with a
-Redis service, the demo server's tests, a Docker Compose smoke test of the demo
-image, `flutter analyze` + `flutter test` for the package and the demo app, and
-uploads coverage to Codecov.
-Keep it green.
+Redis service, the demo server's tests, the release artifacts (JDK 21), a Docker
+Compose smoke test of the demo image, `flutter analyze` + `flutter test` for the
+package and the demo app, `flutter pub publish --dry-run`, and uploads coverage
+to Codecov. Keep it green.
+
+Releases follow [`docs/releasing.md`](docs/releasing.md): `scripts/set-version.sh`,
+the CHANGELOG sections, then a `vX.Y.Z` tag. The release workflow checks that
+they agree, then publishes to Maven Central (published by hand on the Central
+Portal) and pub.dev. Its keys are GitHub secrets, never files.
 
 The starter's Redis tests use `REDIS_URL`, or a local `redis-server`; they are
 skipped when neither exists, except in CI (`MOBILE_MONEY_REQUIRE_REDIS=true`).
@@ -181,8 +192,15 @@ Each rule must be backed by at least one test.
 
 - Talk to the maintainer in French. Code, comments, documentation and commit
   messages are in English, except `README.fr.md`.
-- Semantic versioning. Keep `CHANGELOG.md` up to date in every pull request.
-  First release: `0.1.0`.
+- Semantic versioning. Keep `CHANGELOG.md` up to date in every pull request
+  (and `flutter/sdk_mobile_money/CHANGELOG.md` when the package changes, under
+  its `## X.Y.Z-dev` section). First release: `0.1.0`.
+- `README.md` and `README.fr.md` say the same thing: change both. The README
+  animation (`flutter/sdk_mobile_money/screenshots/demo.gif`, also the pub.dev
+  screenshot) is rendered from the demo app in the Flutter test engine, and
+  says so; it is not a screen recording.
+- Community files: `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`
+  (private reporting through GitHub), issue forms in `.github/ISSUE_TEMPLATE/`.
 - Work step by step: one branch and one pull request per step. At the end of
   each step, give the maintainer a short report: what is done, what is
   verified and how, what remains to be confirmed, and what they must do.

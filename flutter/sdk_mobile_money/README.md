@@ -28,6 +28,15 @@ server to start a payment and reads its status.
 
 ## Install
 
+Once `0.1.0` is on pub.dev:
+
+```yaml
+dependencies:
+  sdk_mobile_money: ^0.1.0
+```
+
+Until then, from the repository:
+
 ```yaml
 dependencies:
   sdk_mobile_money:

@@ -1,0 +1,66 @@
+name: Bug report
+description: Something does not work as documented.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for the report. **Never paste a key, token, signature or webhook body that contains one**, not even from a sandbox, and mask phone numbers. A security problem goes through [private reporting](https://github.com/Backaad/sdk-mobile-money/security/advisories/new) instead. You can write in English or French.
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      options:
+        - Java core
+        - Spring Boot starter
+        - Flutter package
+        - Demo server
+        - Demo app
+        - Documentation
+    validations:
+      required: true
+  - type: dropdown
+    id: provider
+    attributes:
+      label: Provider
+      options:
+        - Campay
+        - MTN MoMo
+        - NotchPay
+        - Tara
+        - Simulation
+        - None, or several
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: The smallest code or configuration that shows the problem (with fake keys).
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Relevant log lines, keys and numbers removed.
+      render: shell
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: SDK version or commit, Java and Spring Boot versions, or Flutter version.
+    validations:
+      required: true
+  - type: checkboxes
+    id: no-secret
+    attributes:
+      label: Check
+      options:
+        - label: This report contains no key, token, signature or customer data.
+          required: true

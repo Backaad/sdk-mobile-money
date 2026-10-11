@@ -169,7 +169,10 @@ void main() {
         });
         final title = find.text('Confirm the payment on your phone');
         expect(title, findsOneWidget);
-        expect(find.textContaining('+237 670 12 34 56'), findsOneWidget);
+        expect(
+          find.textContaining('+237\u00a0670\u00a012\u00a034\u00a056'),
+          findsOneWidget,
+        );
         expect(find.byType(LinearProgressIndicator), findsOneWidget);
         expect(find.byType(FilledButton), findsNothing);
         _expectReadable(tester, title);
@@ -467,16 +470,16 @@ void main() {
     );
 
     expect(find.text('Montant'), findsOneWidget);
-    expect(find.text('1 500 XAF'), findsOneWidget);
+    expect(find.text('1\u202f500\u00a0XAF'), findsOneWidget);
     await _enterNumber(tester, '6701');
-    await _tapPay(tester, 'Payer 1 500 XAF');
+    await _tapPay(tester, 'Payer 1\u202f500\u00a0XAF');
     expect(
       find.text('Un numéro a 9 chiffres, par exemple 670 12 34 56'),
       findsOneWidget,
     );
 
     await _enterNumber(tester, '670123456');
-    await _tapPay(tester, 'Payer 1 500 XAF');
+    await _tapPay(tester, 'Payer 1\u202f500\u00a0XAF');
     expect(
       find.text('Confirmez le paiement sur votre téléphone'),
       findsOneWidget,

@@ -1,6 +1,5 @@
 package io.github.backaad.mobilemoney.demo;
 
-import io.github.backaad.mobilemoney.Currencies;
 import io.github.backaad.mobilemoney.IdempotencyKeyConflictException;
 import io.github.backaad.mobilemoney.InvalidPhoneNumberException;
 import io.github.backaad.mobilemoney.MobileMoney;
@@ -14,12 +13,10 @@ import io.github.backaad.mobilemoney.TransactionStatus;
 import io.github.backaad.mobilemoney.UnsupportedCapabilityException;
 import java.util.Currency;
 import java.util.LinkedHashMap;
-import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -50,11 +47,10 @@ public class PaymentController {
     private final Payments payments;
     private final Currency currency;
 
-    PaymentController(MobileMoney mobileMoney, Payments payments, @Value("${demo.currency:}") String currency) {
+    PaymentController(MobileMoney mobileMoney, Payments payments, Currency currency) {
         this.mobileMoney = mobileMoney;
         this.payments = payments;
-        this.currency = currency == null || currency.isBlank() ? Currencies.XAF
-                : Currency.getInstance(currency.trim().toUpperCase(Locale.ROOT));
+        this.currency = currency;
     }
 
     /**

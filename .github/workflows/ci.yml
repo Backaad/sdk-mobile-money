@@ -60,6 +60,11 @@ jobs:
       - name: Build and test the demo server
         run: ./mvnw --batch-mode --no-transfer-progress -f ../examples/spring-boot-demo/pom.xml verify
 
+      # What Maven Central needs: sources and Javadoc jars (signing is checked by the release workflow).
+      - name: Build the release artifacts
+        if: matrix.java == '21'
+        run: ./mvnw --batch-mode --no-transfer-progress -Prelease -Dgpg.skip -DskipTests -Djacoco.skip=true package
+
       - name: Upload coverage report
         if: matrix.java == '21'
         uses: actions/upload-artifact@v7
@@ -110,6 +115,7 @@ jobs:
           cat response.json
           test "$status" = "201"
           grep -q '"status":"PENDING"' response.json
+          curl -s localhost:8080/api/config | grep -q '"currency":"XAF"'
           docker compose exec -T redis redis-cli --scan --pattern 'mobile-money:idempotency:*' | grep -q ci-0000
 
       - name: Logs
@@ -141,6 +147,9 @@ jobs:
 
       - name: Test
         run: flutter test --coverage
+
+      - name: Check that the package can be published
+        run: flutter pub publish --dry-run
 
       - name: Demo app
         working-directory: examples/flutter-demo

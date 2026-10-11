@@ -1,0 +1,19 @@
+name: Question
+description: How to use the SDK, or how something works.
+labels: [question]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Check the [README](https://github.com/Backaad/sdk-mobile-money#readme), [docs/](https://github.com/Backaad/sdk-mobile-money/tree/main/docs) and the [package README](https://github.com/Backaad/sdk-mobile-money/tree/main/flutter/sdk_mobile_money) first. You can write in English or French. Never paste keys.
+  - type: textarea
+    id: question
+    attributes:
+      label: Your question
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: What you are building, which component and provider, what you tried.

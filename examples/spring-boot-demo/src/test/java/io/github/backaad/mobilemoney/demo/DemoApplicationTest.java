@@ -61,6 +61,13 @@ class DemoApplicationTest {
     }
 
     @Test
+    void configGivesTheCurrency() throws Exception {
+        mvc.perform(get("/api/config"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.currency").value("XAF"));
+    }
+
+    @Test
     void simulationRefusesEveryWebhook() throws Exception {
         mvc.perform(post("/mobile-money/webhooks/simulation").content("{\"status\":\"SUCCESSFUL\"}"))
                 .andExpect(status().isBadRequest());

@@ -5,8 +5,16 @@ description: >-
 version: 0.1.0-dev
 repository: https://github.com/Backaad/sdk-mobile-money/tree/main/flutter/sdk_mobile_money
 issue_tracker: https://github.com/Backaad/sdk-mobile-money/issues
-# Removed when the first release is prepared.
-publish_to: none
+topics:
+  - payments
+  - mobile-money
+  - cameroon
+  - fintech
+screenshots:
+  - description: >-
+      The demo app pays with MobileMoneyCheckout, in light and dark themes,
+      in English and French.
+    path: screenshots/demo.gif
 
 environment:
   sdk: ^3.8.0

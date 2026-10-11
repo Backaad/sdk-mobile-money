@@ -447,7 +447,7 @@ class _MobileMoneyCheckoutState extends State<MobileMoneyCheckout> {
       n.substring(3, 5),
       n.substring(5, 7),
       n.substring(7),
-    ].join(' ');
+    ].join('\u00a0');
   }
 }
 

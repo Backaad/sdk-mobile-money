@@ -10,6 +10,12 @@ the demo server (`POST /api/payments`, then `GET /api/payments/{reference}`).
 The buttons at the top switch between light and dark themes, and between
 English and French.
 
+- The amounts go from 25 to 5000: 25 is for the Campay sandbox, which probably
+  refuses more (to be confirmed).
+- The app shows the currency the server charges in (`GET /api/config`): XAF by
+  default, EUR when the server runs against the MTN MoMo public sandbox
+  (`DEMO_CURRENCY=EUR`). The simulation only takes XAF and XOF.
+
 > The demo server runs in **simulation mode** by default: it talks to nobody
 > and never confirms a payment, so a payment always stays pending (after three
 > minutes, the form says it is still waiting). To see a payment through, run
