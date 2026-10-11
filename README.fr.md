@@ -11,9 +11,9 @@ Tara.
 
 *[Read in English](README.md)*
 
-> **La version 0.1.0 est sortie** sur Maven Central. Le paquet Flutter n'est
-> pas encore sur pub.dev : en attendant, utilisez la
-> [dépendance git](flutter/sdk_mobile_money/README.md#install).
+> **Publié** sur Maven Central : le badge ci-dessus indique la dernière
+> version. Le paquet Flutter n'est pas encore sur pub.dev : en attendant,
+> utilisez la [dépendance git](flutter/sdk_mobile_money/README.md#install).
 
 <p align="center">
   <img src="flutter/sdk_mobile_money/screenshots/demo.gif" width="300"
@@ -59,7 +59,7 @@ confirmer.
    <dependency>
        <groupId>io.github.backaad</groupId>
        <artifactId>sdk-mobile-money-spring-boot-starter</artifactId>
-       <version>0.1.0</version>
+       <version>0.1.1</version>
    </dependency>
    ```
 
@@ -131,7 +131,7 @@ Sans Spring, utilisez directement la bibliothèque du cœur : commencez par
 
 ```yaml
 dependencies:
-  sdk_mobile_money: ^0.1.0
+  sdk_mobile_money: ^0.1.1
 ```
 
 Tant qu'il n'est pas sur pub.dev, utilisez une

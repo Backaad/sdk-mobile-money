@@ -90,6 +90,10 @@ since anyone who can push such a tag can publish.
    scripts/set-version.sh 0.1.0
    ```
 
+   For a release version, the script also updates the installation snippets
+   of `README.md`, `README.fr.md`, `docs/spring-boot.md` and the Flutter
+   package README (pub.dev version and git `ref`).
+
    - `CHANGELOG.md`: rename `## [Unreleased]` to `## [0.1.0] - <date>` (the
      day of the tag), add a new empty `## [Unreleased]` above it, and update
      the comparison links at the bottom of the file;
