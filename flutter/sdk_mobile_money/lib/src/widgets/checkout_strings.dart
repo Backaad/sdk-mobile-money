@@ -224,7 +224,7 @@ final class MobileMoneyCheckoutStrings {
   // French typography: narrow no-break space between thousands, no-break
   // space before the currency.
   static String _frenchAmount(int amount, String currency) =>
-      '${_group(amount, ' ')} $currency';
+      '${_group(amount, '\u202f')}\u00a0$currency';
 
   static String _englishPay(String amount) => 'Pay $amount';
 

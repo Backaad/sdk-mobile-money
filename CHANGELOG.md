@@ -9,6 +9,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Documentation: `README.md` rewritten as the project's front page (demo
+  animation, why, providers, five-minute start on Spring Boot and Flutter,
+  security, roadmap, contributing), and the same in French in `README.fr.md`;
+  `docs/architecture.md` with Mermaid diagrams; `docs/security.md`, which maps
+  each of the eleven rules to its tests; `docs/releasing.md`.
+- `CONTRIBUTING.md` (with how to add a provider), `CODE_OF_CONDUCT.md`
+  (Contributor Covenant 2.1), `SECURITY.md` (private reporting), and issue forms
+  for bugs, new providers and questions.
+- Release preparation: a Maven `release` profile (sources and Javadoc jars,
+  signature, upload to the Central Portal), a release workflow that publishes
+  on a `vX.Y.Z` tag after checking that the versions and CHANGELOG sections
+  agree, and `scripts/set-version.sh`. The CI builds the release artifacts and
+  runs `flutter pub publish --dry-run`.
+- Flutter package: ready for pub.dev (topics, and the demo animation as
+  screenshot).
+- Demo server: `GET /api/config` gives the currency it charges in.
+- Demo app: a 25 amount (the Campay sandbox probably refuses more, to be
+  confirmed), the server's currency shown with the amount, and its own texts in
+  French too.
+
+### Fixed
+
+- Demo app: with five amounts, the selected one wrapped on several lines on a
+  phone screen.
+
 - Flutter package (`flutter/sdk_mobile_money`), which only talks to the
   merchant's server:
   - phone numbers: validation, normalization and operator detection with the

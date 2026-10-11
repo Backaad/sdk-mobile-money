@@ -1,0 +1,50 @@
+name: New provider
+description: Propose a Mobile Money provider or a new country.
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A provider is added from its **official documentation**: everything that cannot be checked there stays "to be confirmed". See [Adding a provider](https://github.com/Backaad/sdk-mobile-money/blob/main/CONTRIBUTING.md#adding-a-provider). Never paste keys.
+  - type: input
+    id: provider
+    attributes:
+      label: Provider
+      placeholder: e.g. Orange Money, Wave
+    validations:
+      required: true
+  - type: input
+    id: countries
+    attributes:
+      label: Countries and currencies
+      placeholder: e.g. Senegal, XOF
+    validations:
+      required: true
+  - type: textarea
+    id: documentation
+    attributes:
+      label: Official documentation
+      description: Links to the API documentation, and how to get access to it (public, after sign-up, after a contract).
+    validations:
+      required: true
+  - type: checkboxes
+    id: capabilities
+    attributes:
+      label: What the API offers, according to its documentation
+      options:
+        - label: Collection
+        - label: Payout
+        - label: Status query
+        - label: Signed webhooks
+        - label: A sandbox
+  - type: textarea
+    id: details
+    attributes:
+      label: Details
+      description: Authentication, phone number format, webhook signature, limits, anything unusual.
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      options:
+        - label: I would like to implement it myself.

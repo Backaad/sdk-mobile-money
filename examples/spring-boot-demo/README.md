@@ -6,9 +6,10 @@ A small server that uses the SDK through its Spring Boot starter:
 |---|---|
 | `POST /api/payments` | Starts a payment. Header `Idempotency-Key` (8 to 64 letters, digits or dashes; one per payment attempt, the same for retries), JSON body `{"phoneNumber": "...", "amount": 500, "description": "..."}`. Answers `201` with the payment, usually `PENDING`. |
 | `GET /api/payments/{reference}` | Reads a payment; asks the provider when it is still pending. |
+| `GET /api/config` | The currency the server charges in, `{"currency": "XAF"}`, so that the app shows the right one. |
 | `GET/POST/PUT /mobile-money/webhooks/{provider}` | Receives the providers' webhooks (from the starter). |
 
-The [Flutter demo app](../flutter-demo) uses the first two routes.
+The [Flutter demo app](../flutter-demo) uses the payments and config routes.
 
 It runs in **simulation mode** by default: it talks to nobody and never confirms a
 payment, so a payment stays `PENDING`. To go further, use a provider's sandbox.
