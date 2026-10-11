@@ -9,7 +9,7 @@ event when a payment succeeds or fails. It requires Spring Boot 4 and Java 17.
 <dependency>
     <groupId>io.github.backaad</groupId>
     <artifactId>sdk-mobile-money-spring-boot-starter</artifactId>
-    <version>0.1.1</version>
+    <version>0.1.2</version>
 </dependency>
 ```
 

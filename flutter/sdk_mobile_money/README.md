@@ -27,7 +27,7 @@ server to start a payment and reads its status.
 
 ```yaml
 dependencies:
-  sdk_mobile_money: ^0.1.1
+  sdk_mobile_money: ^0.1.2
 ```
 
 Or from the repository, at a release tag:
@@ -38,7 +38,7 @@ dependencies:
     git:
       url: https://github.com/Backaad/sdk-mobile-money.git
       path: flutter/sdk_mobile_money
-      ref: v0.1.1
+      ref: v0.1.2
 ```
 
 ## The payment form

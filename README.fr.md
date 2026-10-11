@@ -59,7 +59,7 @@ confirmer.
    <dependency>
        <groupId>io.github.backaad</groupId>
        <artifactId>sdk-mobile-money-spring-boot-starter</artifactId>
-       <version>0.1.1</version>
+       <version>0.1.2</version>
    </dependency>
    ```
 
@@ -131,7 +131,7 @@ Sans Spring, utilisez directement la bibliothèque du cœur : commencez par
 
 ```yaml
 dependencies:
-  sdk_mobile_money: ^0.1.1
+  sdk_mobile_money: ^0.1.2
 ```
 
 ```dart

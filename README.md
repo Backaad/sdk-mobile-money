@@ -56,7 +56,7 @@ has an Orange channel; Campay and Tara are to be confirmed.
    <dependency>
        <groupId>io.github.backaad</groupId>
        <artifactId>sdk-mobile-money-spring-boot-starter</artifactId>
-       <version>0.1.1</version>
+       <version>0.1.2</version>
    </dependency>
    ```
 
@@ -126,7 +126,7 @@ core library directly: start from `MobileMoney.builder()` (see its Javadoc).
 
 ```yaml
 dependencies:
-  sdk_mobile_money: ^0.1.1
+  sdk_mobile_money: ^0.1.2
 ```
 
 ```dart
