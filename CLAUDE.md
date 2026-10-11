@@ -91,6 +91,8 @@ skipped when they are missing: to run them, load your own `.env` first
   value. Redis is optional (`spring-data-redis` is an optional dependency); the
   stores' Redis format is explicit JSON with a version field (`RedisCodec`).
 - Dependency and plugin versions are managed in `java/pom.xml`.
+- Every public element, and every field of a serializable class, has Javadoc:
+  the release profile fails on a Javadoc warning, and the CI builds it.
 
 ## Core design (Java)
 
@@ -118,6 +120,8 @@ skipped when they are missing: to run them, load your own `.env` first
 
 - Package `sdk_mobile_money`. It never embeds a provider key and never calls a
   provider API: it only calls the merchant's server.
+- Its README is the pub.dev page of each version: it never says whether the
+  package is published.
 - Phone number normalization and provider detection follow exactly the same
   rules as the Java core, including which characters count as separators
   (Java's `Character.isWhitespace` and `isSpaceChar`, not Dart's `trim`). Both

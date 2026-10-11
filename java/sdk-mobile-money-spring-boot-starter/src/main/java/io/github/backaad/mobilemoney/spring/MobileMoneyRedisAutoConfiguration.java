@@ -44,6 +44,10 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 public class MobileMoneyRedisAutoConfiguration {
 
     private static final Logger LOG = LoggerFactory.getLogger(MobileMoneyRedisAutoConfiguration.class);
+
+    /** Created by Spring Boot. */
+    public MobileMoneyRedisAutoConfiguration() {
+    }
     private static final Clock CLOCK = Clock.systemUTC();
 
     /**

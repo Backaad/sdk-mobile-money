@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Javadoc: the last undocumented public constructors and serialized fields are
+  documented, and the release build now fails on any Javadoc warning.
+
+### Changed
+
+- README: 0.1.0 is on Maven Central (badge); the Flutter package, not yet on
+  pub.dev, installs from the repository at the `v0.1.0` tag. The package
+  README no longer states whether it is published, since pub.dev shows it.
+- Development versions: `0.1.1-SNAPSHOT`, Flutter package `0.1.1-dev`.
+
 ## [0.1.0] - 2026-10-11
 
 First release.

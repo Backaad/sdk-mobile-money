@@ -4,9 +4,6 @@ Collect Mobile Money payments in Cameroon from a Flutter app, through your own
 server. Provider keys never ship in the app: this package only talks to the
 merchant's server, never to Mobile Money providers directly.
 
-> **Work in progress, not published yet.** The first release will be `0.1.0`.
-> Until then, depend on the repository (see [Install](#install)).
-
 It contains:
 
 - **Phone numbers**: validation, normalization and operator detection, with
@@ -28,14 +25,12 @@ server to start a payment and reads its status.
 
 ## Install
 
-Once `0.1.0` is on pub.dev:
-
 ```yaml
 dependencies:
   sdk_mobile_money: ^0.1.0
 ```
 
-Until then, from the repository:
+Or from the repository, at a release tag:
 
 ```yaml
 dependencies:
@@ -43,6 +38,7 @@ dependencies:
     git:
       url: https://github.com/Backaad/sdk-mobile-money.git
       path: flutter/sdk_mobile_money
+      ref: v0.1.0
 ```
 
 ## The payment form

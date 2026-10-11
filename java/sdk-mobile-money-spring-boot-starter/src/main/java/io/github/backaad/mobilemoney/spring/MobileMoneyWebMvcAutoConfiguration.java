@@ -23,6 +23,10 @@ import org.springframework.web.servlet.DispatcherServlet;
 @ConditionalOnBooleanProperty(name = "mobile-money.webhook.enabled", matchIfMissing = true)
 public class MobileMoneyWebMvcAutoConfiguration {
 
+    /** Created by Spring Boot. */
+    public MobileMoneyWebMvcAutoConfiguration() {
+    }
+
     /**
      * The webhook endpoint.
      *

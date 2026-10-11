@@ -5,12 +5,13 @@ interface, whatever the provider behind it: MTN MoMo, Campay, NotchPay or Tara.
 
 [![CI](https://github.com/Backaad/sdk-mobile-money/actions/workflows/ci.yml/badge.svg)](https://github.com/Backaad/sdk-mobile-money/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/Backaad/sdk-mobile-money/graph/badge.svg)](https://codecov.io/gh/Backaad/sdk-mobile-money)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.backaad/sdk-mobile-money-core)](https://central.sonatype.com/artifact/io.github.backaad/sdk-mobile-money-core)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 *[Lire en français](README.fr.md)*
 
-> **Not released yet.** Everything below works from this repository; the first
-> version, `0.1.0`, is being prepared for Maven Central and pub.dev.
+> **0.1.0 is out** on Maven Central. The Flutter package is not on pub.dev yet:
+> meanwhile, use the [git dependency](flutter/sdk_mobile_money/README.md#install).
 
 <p align="center">
   <img src="flutter/sdk_mobile_money/screenshots/demo.gif" width="300"
@@ -57,9 +58,6 @@ has an Orange channel; Campay and Tara are to be confirmed.
        <version>0.1.0</version>
    </dependency>
    ```
-
-   Until `0.1.0` is on Maven Central, install it from this repository with
-   `(cd java && ./mvnw install -DskipTests)` and use `0.1.0-SNAPSHOT`.
 
 2. Configure a provider. Keys come from the environment, never from a
    committed file:
@@ -181,7 +179,7 @@ Each of the eleven rules behind these points has its tests: see
 
 ## Roadmap
 
-- **0.1.0**: first release on Maven Central and pub.dev.
+- **0.1.0**: first release, on Maven Central. Next: the Flutter package on pub.dev.
 - Confirm everything marked "to be confirmed" against the sandboxes and the
   official documentation: provider details, and the default phone prefix table
   against the numbering plan of ART, the Cameroon regulator.

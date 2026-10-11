@@ -27,7 +27,8 @@ sources instead:
 | pub.dev: the first version of a package must be published by hand; automated publishing is then enabled on the package's admin page, with the repository and a tag pattern containing `{{version}}`; only a workflow triggered by a tag push can publish | the source of the dart.dev page "Automated publishing" (`dart-lang/site-www`) | checked |
 | `dart-lang/setup-dart/.github/workflows/publish.yml@v1`: sets up Dart and Flutter, runs `dart pub publish --dry-run` then `dart pub publish -f` in `working-directory` | the workflow's source | checked |
 | Central Portal: the namespace `io.github.backaad` is registered and shown as **Verified**, and a user token exists | the maintainer's Central Portal account (2026-10-11) | checked |
-| Central Portal: whether the public GPG key must be on a key server, and which one; which POM fields are required | the Sonatype documentation | **to be confirmed** (the first deployment's validation will tell) |
+| Central Portal: the POMs have every required field, and the signatures are accepted with the public key sent to `keyserver.ubuntu.com` and `keys.openpgp.org` | the validation of the 0.1.0 deployment (2026-10-11) | checked |
+| Central Portal: which key server is actually used | the Sonatype documentation | to be confirmed |
 
 The sources and Javadoc jars are built on every pull request (CI, JDK 21), and
 `flutter pub publish --dry-run` runs on every pull request too.
@@ -118,7 +119,11 @@ since anyone who can push such a tag can publish.
 
    with `## 0.1.1-dev` at the top of the Flutter package CHANGELOG.
 
-After the first release, the README can get Maven Central and pub.dev badges:
+The README of the Flutter package is the pub.dev page of the version: it must
+not say whether the package is published, since that changes after the tag.
+
+Once the package is on pub.dev, the README can get its badge (the Maven Central
+one is there since 0.1.0):
 
 ```md
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.backaad/sdk-mobile-money-core)](https://central.sonatype.com/artifact/io.github.backaad/sdk-mobile-money-core)

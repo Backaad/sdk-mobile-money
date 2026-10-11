@@ -10,6 +10,7 @@ public class PaymentRejectedException extends MobileMoneyException {
 
     private static final long serialVersionUID = 1L;
 
+    /** The provider's code for the refusal, or null. */
     private final String providerCode;
 
     /**
