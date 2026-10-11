@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-10-11
+
 ### Fixed
 
 - Javadoc: the last undocumented public constructors and serialized fields are
@@ -14,10 +16,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- README: 0.1.0 is on Maven Central (badge); the Flutter package, not yet on
-  pub.dev, installs from the repository at the `v0.1.0` tag. The package
-  README no longer states whether it is published, since pub.dev shows it.
-- Development versions: `0.1.1-SNAPSHOT`, Flutter package `0.1.1-dev`.
+- README: Maven Central badge, and a status that no longer names a version;
+  until the Flutter package is on pub.dev, it installs from the repository at
+  the release tag. The package README no longer states whether it is
+  published, since pub.dev shows it.
+- `scripts/set-version.sh` also updates the installation snippets of the
+  documentation for a release version.
 
 ## [0.1.0] - 2026-10-11
 
@@ -131,5 +135,6 @@ First release.
   Boot 4 starter, empty Flutter package, CI on GitHub Actions (JDK 17 and 21,
   Flutter) with coverage sent to Codecov, `.env.example` and `CLAUDE.md`.
 
-[Unreleased]: https://github.com/Backaad/sdk-mobile-money/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/Backaad/sdk-mobile-money/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/Backaad/sdk-mobile-money/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/Backaad/sdk-mobile-money/releases/tag/v0.1.0

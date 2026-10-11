@@ -2,7 +2,7 @@ name: sdk_mobile_money
 description: >-
   Collect Mobile Money payments in Cameroon from a Flutter app, through your
   own server: provider keys never ship in the app.
-version: 0.1.1-dev
+version: 0.1.1
 repository: https://github.com/Backaad/sdk-mobile-money/tree/main/flutter/sdk_mobile_money
 issue_tracker: https://github.com/Backaad/sdk-mobile-money/issues
 topics:

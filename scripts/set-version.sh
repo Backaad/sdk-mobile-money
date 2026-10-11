@@ -5,7 +5,8 @@
 #   scripts/set-version.sh 0.1.1-SNAPSHOT   after it; the Flutter package then gets 0.1.1-dev
 #
 # It changes the Java POMs, the SDK version used by the demo server, and the version of the
-# Flutter package. The CHANGELOG sections are written by hand.
+# Flutter package; for a release version, also the installation snippets of the documentation.
+# The CHANGELOG sections are written by hand.
 set -euo pipefail
 
 version="${1:-}"
@@ -32,6 +33,18 @@ rm "$demo_pom.bak"
 pubspec="$root/flutter/sdk_mobile_money/pubspec.yaml"
 sed -i.bak "s|^version: .*|version: $dart_version|" "$pubspec"
 rm "$pubspec.bak"
+
+# Installation snippets, for a release version only: a development version is not on Maven Central.
+if [[ "$version" != *-SNAPSHOT ]]; then
+  for doc in README.md README.fr.md docs/spring-boot.md; do
+    sed -i.bak -E "s|<version>[0-9]+\.[0-9]+\.[0-9]+(-SNAPSHOT)?</version>|<version>$version</version>|" "$root/$doc"
+    sed -i.bak -E "s|sdk_mobile_money: \^[0-9]+\.[0-9]+\.[0-9]+|sdk_mobile_money: ^$version|" "$root/$doc"
+    rm "$root/$doc.bak"
+  done
+  readme="$root/flutter/sdk_mobile_money/README.md"
+  sed -i.bak -E "s|sdk_mobile_money: \^[0-9]+\.[0-9]+\.[0-9]+|sdk_mobile_money: ^$version|; s|ref: v[0-9]+\.[0-9]+\.[0-9]+|ref: v$version|" "$readme"
+  rm "$readme.bak"
+fi
 
 echo "Java $version, Flutter package $dart_version."
 echo "Now write the CHANGELOG sections: '## [$version] - <date>' in CHANGELOG.md"

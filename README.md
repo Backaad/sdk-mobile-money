@@ -10,8 +10,9 @@ interface, whatever the provider behind it: MTN MoMo, Campay, NotchPay or Tara.
 
 *[Lire en français](README.fr.md)*
 
-> **0.1.0 is out** on Maven Central. The Flutter package is not on pub.dev yet:
-> meanwhile, use the [git dependency](flutter/sdk_mobile_money/README.md#install).
+> **Released** on Maven Central: the badge above shows the latest version. The
+> Flutter package is not on pub.dev yet: meanwhile, use the
+> [git dependency](flutter/sdk_mobile_money/README.md#install).
 
 <p align="center">
   <img src="flutter/sdk_mobile_money/screenshots/demo.gif" width="300"
@@ -55,7 +56,7 @@ has an Orange channel; Campay and Tara are to be confirmed.
    <dependency>
        <groupId>io.github.backaad</groupId>
        <artifactId>sdk-mobile-money-spring-boot-starter</artifactId>
-       <version>0.1.0</version>
+       <version>0.1.1</version>
    </dependency>
    ```
 
@@ -125,7 +126,7 @@ core library directly: start from `MobileMoney.builder()` (see its Javadoc).
 
 ```yaml
 dependencies:
-  sdk_mobile_money: ^0.1.0
+  sdk_mobile_money: ^0.1.1
 ```
 
 Until it is on pub.dev, use a
