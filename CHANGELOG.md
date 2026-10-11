@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-10-11
+
 ### Added
 
 - Flutter package: an example (`example/example.md`) for the Example tab of
@@ -14,8 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- README: the Flutter package is on pub.dev (badge). Development versions:
-  `0.1.2-SNAPSHOT`, Flutter package `0.1.2-dev`.
+- README: the Flutter package is on pub.dev (badge).
 
 ## [0.1.1] - 2026-10-11
 
@@ -145,6 +146,7 @@ First release.
   Boot 4 starter, empty Flutter package, CI on GitHub Actions (JDK 17 and 21,
   Flutter) with coverage sent to Codecov, `.env.example` and `CLAUDE.md`.
 
-[Unreleased]: https://github.com/Backaad/sdk-mobile-money/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/Backaad/sdk-mobile-money/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/Backaad/sdk-mobile-money/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/Backaad/sdk-mobile-money/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/Backaad/sdk-mobile-money/releases/tag/v0.1.0
