@@ -38,8 +38,9 @@ jobs:
           status=0
           [ "$java_version" = "$version" ] || { echo "::error::java/pom.xml is $java_version, the tag is $version"; status=1; }
           [ "$dart_version" = "$version" ] || { echo "::error::pubspec.yaml is $dart_version, the tag is $version"; status=1; }
-          grep -q "^## \[$version\]" CHANGELOG.md || { echo "::error::CHANGELOG.md has no [$version] section"; status=1; }
-          grep -q "^## $version" flutter/sdk_mobile_money/CHANGELOG.md \
+          # Fixed strings: a forgotten "## 0.1.0-dev" section must not pass for "## 0.1.0".
+          grep -qF "## [$version] - " CHANGELOG.md || { echo "::error::CHANGELOG.md has no [$version] section"; status=1; }
+          grep -qxF "## $version" flutter/sdk_mobile_money/CHANGELOG.md \
             || { echo "::error::flutter/sdk_mobile_money/CHANGELOG.md has no $version section"; status=1; }
           exit $status
 

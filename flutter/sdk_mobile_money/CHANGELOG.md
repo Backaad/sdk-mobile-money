@@ -1,8 +1,8 @@
 # Changelog
 
-## 0.1.0-dev
+## 0.1.0
 
-Not published yet.
+First release.
 
 - Phone numbers: `PhoneNumber` (validation and normalization), `PrefixTable`
   (operator detection, configurable), with exactly the rules of the Java core,
